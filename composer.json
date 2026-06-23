@@ -1,0 +1,31 @@
+{
+  "name": "scrutineerhq/scrutinizer",
+  "description": "WordPress Performance Profiler",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://scrutineer.dev/scrutinizer",
+  "authors": [
+    {
+      "name": "The Scrutineer Project",
+      "homepage": "https://scrutineer.dev"
+    }
+  ],
+  "require": {
+    "php": ">=7.4"
+  },
+  "require-dev": {
+    "wp-coding-standards/wpcs": "^3.0",
+    "phpcompatibility/phpcompatibility-wp": "^2.1",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+    "yoast/phpunit-polyfills": "^2.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "scripts": {
+    "lint": "phpcs",
+    "lint:fix": "phpcbf"
+  }
+}
