@@ -28,6 +28,9 @@ define( 'SCRUTINIZER_URL', plugin_dir_url( __FILE__ ) );
 
 /**
  * Autoloader.
+ *
+ * Maps the Scrutinizer\ namespace to the includes/ directory using PSR-4
+ * conventions with directory separators derived from the namespace path.
  */
 spl_autoload_register(
 	function ( $class_name ) {
@@ -48,25 +51,57 @@ spl_autoload_register(
 );
 
 /**
- * Plugin activation.
+ * Plugin activation callback.
+ *
+ * Creates the profiles database table.
  */
 function scrutinizer_activate() {
-	// Activation tasks.
+	\Scrutinizer\Profiler\Storage::create_table();
 }
 register_activation_hook( __FILE__, 'scrutinizer_activate' );
 
 /**
- * Plugin deactivation.
+ * Plugin deactivation callback.
+ *
+ * Stops any active profiling session.
  */
 function scrutinizer_deactivate() {
-	// Cleanup tasks.
+	\Scrutinizer\Profiler\Session::stop_session();
 }
 register_deactivation_hook( __FILE__, 'scrutinizer_deactivate' );
 
 /**
- * Initialize the plugin.
+ * Start the profiler early.
+ *
+ * Hooked at `plugins_loaded` priority 0 so that instrumentation wraps as
+ * many callbacks as possible before they fire.
  */
-function scrutinizer_init() {
+function scrutinizer_boot_profiler() {
+	\Scrutinizer\Profiler\Profiler::instance()->init();
+}
+add_action( 'plugins_loaded', 'scrutinizer_boot_profiler', 0 );
+
+/**
+ * Handle session activation tokens on `init`.
+ */
+function scrutinizer_handle_activation() {
+	\Scrutinizer\Profiler\Session::handle_activation();
+}
+add_action( 'init', 'scrutinizer_handle_activation' );
+
+/**
+ * Load text domain for translations.
+ */
+function scrutinizer_load_textdomain() {
 	load_plugin_textdomain( 'scrutinizer', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
-add_action( 'init', 'scrutinizer_init' );
+add_action( 'init', 'scrutinizer_load_textdomain' );
+
+/**
+ * Register admin page and AJAX handlers.
+ */
+function scrutinizer_admin_init() {
+	\Scrutinizer\Admin\Dashboard::register();
+	\Scrutinizer\Admin\Ajax::register();
+}
+add_action( 'plugins_loaded', 'scrutinizer_admin_init' );

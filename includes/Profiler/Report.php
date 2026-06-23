@@ -1,0 +1,267 @@
+<?php
+/**
+ * Profile report compiler.
+ *
+ * @package Scrutinizer
+ */
+
+namespace Scrutinizer\Profiler;
+
+/**
+ * Aggregates raw callback timings into a structured profile report.
+ */
+class Report {
+
+	/**
+	 * Compile raw timings and call stack trace into a report.
+	 *
+	 * @param array $raw_timings       Timing entries from Instrumentor.
+	 * @param array $call_stack_trace   Trace from CallStack.
+	 * @param array $request_metadata  Request metadata (url, method, start time, etc).
+	 * @return array  Compiled profile data structure.
+	 */
+	public static function compile( $raw_timings, $call_stack_trace, $request_metadata ) {
+		$duration_ns = isset( $request_metadata['duration_ns'] ) ? $request_metadata['duration_ns'] : 0;
+
+		// Group timings by attribution.
+		$by_source     = array();
+		$total_excl_ns = 0;
+
+		foreach ( $raw_timings as $timing ) {
+			$attr = $timing['attribution'];
+			$key  = $attr['type'] . ':' . $attr['slug'];
+
+			if ( ! isset( $by_source[ $key ] ) ) {
+				$by_source[ $key ] = array(
+					'type'         => $attr['type'],
+					'slug'         => $attr['slug'],
+					'name'         => $attr['name'],
+					'exclusive_ns' => 0,
+					'inclusive_ns' => 0,
+					'call_count'   => 0,
+					'memory_delta' => 0,
+					'callbacks'    => array(),
+				);
+			}
+
+			$by_source[ $key ]['exclusive_ns'] += $timing['exclusive_ns'];
+			$by_source[ $key ]['inclusive_ns'] += $timing['inclusive_ns'];
+			$by_source[ $key ]['memory_delta'] += ( $timing['memory_after'] - $timing['memory_before'] );
+			++$by_source[ $key ]['call_count'];
+
+			// Per-callback detail.
+			$cb_key = $timing['identity'];
+			if ( ! isset( $by_source[ $key ]['callbacks'][ $cb_key ] ) ) {
+				$by_source[ $key ]['callbacks'][ $cb_key ] = array(
+					'callback'     => $timing['callback'],
+					'tag'          => $timing['tag'],
+					'priority'     => $timing['priority'],
+					'exclusive_ns' => 0,
+					'inclusive_ns' => 0,
+					'call_count'   => 0,
+				);
+			}
+
+			$by_source[ $key ]['callbacks'][ $cb_key ]['exclusive_ns'] += $timing['exclusive_ns'];
+			$by_source[ $key ]['callbacks'][ $cb_key ]['inclusive_ns'] += $timing['inclusive_ns'];
+			++$by_source[ $key ]['callbacks'][ $cb_key ]['call_count'];
+
+			$total_excl_ns += $timing['exclusive_ns'];
+		}
+
+		// Sort sources by exclusive time descending.
+		uasort(
+			$by_source,
+			function ( $a, $b ) {
+				return $b['exclusive_ns'] <=> $a['exclusive_ns'];
+			}
+		);
+
+		// Convert callbacks from keyed map to indexed list, sorted by exclusive time.
+		foreach ( $by_source as &$source ) {
+			$cbs = array_values( $source['callbacks'] );
+			usort(
+				$cbs,
+				function ( $a, $b ) {
+					return $b['exclusive_ns'] <=> $a['exclusive_ns'];
+				}
+			);
+			$source['callbacks'] = $cbs;
+		}
+		unset( $source );
+
+		// Compute breakdown percentages by type.
+		$breakdown = self::compute_breakdown( $by_source, $total_excl_ns, $duration_ns );
+
+		$unattributed_ns = max( 0, $duration_ns - $total_excl_ns );
+
+		// Route classification.
+		$route_class = isset( $request_metadata['route_class'] )
+			? $request_metadata['route_class']
+			: self::classify_route( $request_metadata );
+
+		return array(
+			'summary' => array(
+				'duration_ns'        => $duration_ns,
+				'duration_ms'        => round( $duration_ns / 1e6, 2 ),
+				'total_exclusive_ns' => $total_excl_ns,
+				'unattributed_ns'    => $unattributed_ns,
+				'breakdown'          => $breakdown,
+				'callback_count'     => count( $raw_timings ),
+				'source_count'       => count( $by_source ),
+			),
+			'sources' => array_values( $by_source ),
+			'trace'   => $call_stack_trace,
+			'request' => array(
+				'url'         => isset( $request_metadata['url'] ) ? $request_metadata['url'] : '',
+				'method'      => isset( $request_metadata['method'] ) ? $request_metadata['method'] : 'GET',
+				'route_class' => $route_class,
+				'php_version' => PHP_VERSION,
+				'wp_version'  => isset( $request_metadata['wp_version'] ) ? $request_metadata['wp_version'] : '',
+				'timestamp'   => isset( $request_metadata['timestamp'] ) ? $request_metadata['timestamp'] : time(),
+				'memory_peak' => memory_get_peak_usage(),
+			),
+		);
+	}
+
+	/**
+	 * Compute a percentage breakdown by attribution type.
+	 *
+	 * @param array $by_source      Sources keyed by type:slug.
+	 * @param int   $total_excl_ns  Total exclusive nanoseconds.
+	 * @param int   $duration_ns    Total request duration nanoseconds.
+	 * @return array
+	 */
+	private static function compute_breakdown( $by_source, $total_excl_ns, $duration_ns ) {
+		$types = array(
+			'plugin'    => 0,
+			'theme'     => 0,
+			'core'      => 0,
+			'mu-plugin' => 0,
+			'drop-in'   => 0,
+			'unknown'   => 0,
+		);
+
+		foreach ( $by_source as $source ) {
+			$type = $source['type'];
+			if ( isset( $types[ $type ] ) ) {
+				$types[ $type ] += $source['exclusive_ns'];
+			} else {
+				$types['unknown'] += $source['exclusive_ns'];
+			}
+		}
+
+		$unattributed_ns       = max( 0, $duration_ns - $total_excl_ns );
+		$types['unattributed'] = $unattributed_ns;
+
+		$breakdown = array();
+		foreach ( $types as $type => $ns ) {
+			$pct = ( $duration_ns > 0 ) ? round( ( $ns / $duration_ns ) * 100, 1 ) : 0;
+			if ( $ns > 0 || 'unattributed' === $type ) {
+				$breakdown[ $type ] = array(
+					'ns'      => $ns,
+					'ms'      => round( $ns / 1e6, 2 ),
+					'percent' => $pct,
+				);
+			}
+		}
+
+		return $breakdown;
+	}
+
+	/**
+	 * Classify a request URL into a route category.
+	 *
+	 * @param array $metadata  Request metadata.
+	 * @return string  Route class label.
+	 */
+	private static function classify_route( $metadata ) {
+		$url = isset( $metadata['url'] ) ? $metadata['url'] : '';
+
+		if ( empty( $url ) ) {
+			return 'unknown';
+		}
+
+		$path = wp_parse_url( $url, PHP_URL_PATH );
+		if ( null === $path ) {
+			$path = '/';
+		}
+
+		// WP Admin.
+		$admin_path = wp_parse_url( admin_url(), PHP_URL_PATH );
+		if ( $admin_path && 0 === strpos( $path, $admin_path ) ) {
+			return 'wp-admin';
+		}
+
+		// REST API.
+		if ( false !== strpos( $path, '/wp-json/' ) || false !== strpos( $path, '/?rest_route=' ) ) {
+			return 'rest-api';
+		}
+
+		// WP-Cron.
+		if ( false !== strpos( $path, '/wp-cron.php' ) ) {
+			return 'wp-cron';
+		}
+
+		// AJAX.
+		if ( false !== strpos( $path, '/admin-ajax.php' ) ) {
+			return 'admin-ajax';
+		}
+
+		// Login.
+		if ( false !== strpos( $path, '/wp-login.php' ) ) {
+			return 'wp-login';
+		}
+
+		// Front-end — can only be classified after WP has loaded query vars,
+		// so we return 'frontend' and let a later pass refine it.
+		return 'frontend';
+	}
+
+	/**
+	 * Refine the route class using WordPress query conditionals.
+	 *
+	 * Should be called after the main query has run (e.g. on `wp`).
+	 *
+	 * @return string
+	 */
+	public static function classify_frontend_route() {
+		if ( is_front_page() || is_home() ) {
+			return 'frontend-home';
+		}
+
+		if ( is_singular() ) {
+			return 'singular';
+		}
+
+		if ( is_archive() || is_category() || is_tag() || is_author() || is_date() ) {
+			return 'archive';
+		}
+
+		if ( is_search() ) {
+			return 'search';
+		}
+
+		if ( is_404() ) {
+			return 'not-found';
+		}
+
+		// WooCommerce conditionals if available.
+		if ( function_exists( 'is_shop' ) ) {
+			if ( is_shop() ) {
+				return 'woocommerce-shop';
+			}
+			if ( function_exists( 'is_cart' ) && is_cart() ) {
+				return 'woocommerce-cart';
+			}
+			if ( function_exists( 'is_checkout' ) && is_checkout() ) {
+				return 'woocommerce-checkout';
+			}
+			if ( function_exists( 'is_product' ) && is_product() ) {
+				return 'woocommerce-product';
+			}
+		}
+
+		return 'frontend';
+	}
+}

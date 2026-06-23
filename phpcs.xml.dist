@@ -15,6 +15,14 @@
 	<config name="minimum_supported_wp_version" value="6.0"/>
 	<config name="testVersion" value="7.4-"/>
 
+	<!-- PSR-4 autoloading: file names follow namespace path, not class-*.php convention. -->
+	<rule ref="WordPress.Files.FileName.NotHyphenatedLowercase">
+		<exclude-pattern>includes/</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.Files.FileName.InvalidClassFileName">
+		<exclude-pattern>includes/</exclude-pattern>
+	</rule>
+
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
