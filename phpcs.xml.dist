@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<ruleset name="Scrutinizer">
+	<description>Coding standards for Scrutinizer</description>
+
+	<file>scrutinizer.php</file>
+	<file>includes/</file>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<rule ref="WordPress-Core"/>
+	<rule ref="WordPress-Docs"/>
+
+	<config name="minimum_supported_wp_version" value="6.0"/>
+	<config name="testVersion" value="7.4-"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="scrutinizer"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>

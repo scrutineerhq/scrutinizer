@@ -1,0 +1,33 @@
+# WordPress
+wp-content/
+wp-config.php
+
+# Dependencies
+vendor/
+node_modules/
+
+# Build artifacts
+*.zip
+*.tar.gz
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Composer
+composer.lock
+
+# Debug
+*.log
+debug.log
