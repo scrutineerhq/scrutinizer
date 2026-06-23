@@ -93,12 +93,11 @@ class Profiler {
 	public function start() {
 		$this->active = true;
 
-		// Record request start from the server, converted to nanoseconds.
-		if ( isset( $_SERVER['REQUEST_TIME_FLOAT'] ) ) {
-			$this->request_start_ns = (int) ( $_SERVER['REQUEST_TIME_FLOAT'] * 1e9 );
-		} else {
-			$this->request_start_ns = hrtime( true );
-		}
+		// Always use hrtime for consistent monotonic clock domain.
+		// We lose the few ms between SAPI start and plugin load, but
+		// mixing REQUEST_TIME_FLOAT (wall clock) with hrtime (monotonic)
+		// produces garbage durations.
+		$this->request_start_ns = hrtime( true );
 
 		$this->call_stack   = new CallStack();
 		$this->instrumentor = new Instrumentor( $this->call_stack );
