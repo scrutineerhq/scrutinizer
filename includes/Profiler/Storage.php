@@ -40,14 +40,19 @@ class Storage {
 			route_class varchar(50) NOT NULL DEFAULT '',
 			route_key varchar(255) NOT NULL DEFAULT '',
 			duration_ns bigint(20) unsigned NOT NULL DEFAULT 0,
+			user_role varchar(50) NOT NULL DEFAULT 'anonymous',
 			profile_data longtext NOT NULL,
 			captured_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+			is_pinned tinyint(1) NOT NULL DEFAULT 0,
+			note text NOT NULL,
+			tags varchar(255) NOT NULL DEFAULT '',
 			is_baseline tinyint(1) NOT NULL DEFAULT 0,
 			baseline_name varchar(255) NOT NULL DEFAULT '',
 			PRIMARY KEY  (id),
 			KEY session_id (session_id),
 			KEY profile_type (profile_type),
 			KEY route_key (route_key),
+			KEY is_pinned (is_pinned),
 			KEY is_baseline (is_baseline)
 		) {$charset};";
 
@@ -107,7 +112,12 @@ class Storage {
 			return false;
 		}
 
-		return (int) $wpdb->insert_id;
+		$insert_id = (int) $wpdb->insert_id;
+
+		// Auto-prune old unpinned profiles for this route.
+		self::auto_prune( $route_key );
+
+		return $insert_id;
 	}
 
 	/**
@@ -147,7 +157,7 @@ class Storage {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is safe from self::table_name().
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT id, session_id, request_url, request_method, route_class, duration_ns, user_role, captured_at, is_baseline, baseline_name FROM {$table} WHERE session_id = %s ORDER BY captured_at DESC",
+				"SELECT id, session_id, request_url, request_method, route_class, duration_ns, user_role, captured_at, is_pinned, note, tags FROM {$table} WHERE session_id = %s ORDER BY captured_at DESC",
 				$session_id
 			),
 			ARRAY_A
@@ -241,7 +251,7 @@ class Storage {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is safe from self::table_name().
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT id, session_id, request_url, request_method, route_class, duration_ns, user_role, captured_at, is_baseline, baseline_name FROM {$table} ORDER BY captured_at DESC LIMIT %d",
+				"SELECT id, session_id, request_url, request_method, route_class, duration_ns, user_role, captured_at, is_pinned, note, tags FROM {$table} ORDER BY captured_at DESC LIMIT %d",
 				$limit
 			),
 			ARRAY_A

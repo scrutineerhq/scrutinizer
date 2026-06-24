@@ -594,7 +594,6 @@
 		var html = '<div class="scrutinizer-timeline-container">';
 
 		// Phase marker labels at top — stack upward to prevent collisions.
-		html += '<div class="scrutinizer-phase-labels">';
 		var labelPositions = [];
 		for ( var m = 0; m < phaseMarkers.length; m++ ) {
 			var marker   = phaseMarkers[ m ];
@@ -622,10 +621,14 @@
 				maxTier = labelTiers[ lt ];
 			}
 		}
+		// Container height: 18px per tier + 4px padding.
+		var labelsHeight = ( maxTier + 1 ) * 18 + 4;
+		html += '<div class="scrutinizer-phase-labels" style="height:' + labelsHeight + 'px">';
 		for ( var lk = 0; lk < labelPositions.length; lk++ ) {
-			// Bottom tier = closest to bar. Higher tiers go up.
-			var bottomPx = labelTiers[ lk ] * 18;
-			html += '<div class="phase-label" style="left:' + labelPositions[ lk ].pct.toFixed( 2 ) + '%;bottom:' + bottomPx + 'px">';
+			// Tier 0 = bottom row (closest to bar), higher tiers go up.
+			// Use top positioning: highest tier at top:0, lowest tier at bottom.
+			var topPx = ( maxTier - labelTiers[ lk ] ) * 18;
+			html += '<div class="phase-label" style="left:' + labelPositions[ lk ].pct.toFixed( 2 ) + '%;top:' + topPx + 'px">';
 			html += '<span class="phase-label-text">' + esc( formatPhaseName( labelPositions[ lk ].name ) ) + '</span>';
 			html += '</div>';
 		}
@@ -634,16 +637,16 @@
 		// Timeline bar with phase marker lines.
 		html += '<div class="scrutinizer-timeline-bar">';
 
-		// Phase marker vertical lines.
+		// Phase marker vertical lines — extend up through the labels area.
+		var lineTopPx = labelsHeight + 8;
 		for ( var p = 0; p < phaseMarkers.length; p++ ) {
 			var pm    = phaseMarkers[ p ];
 			var pmPct = ( pm.offset_ns / durationNs ) * 100;
 			if ( pmPct > 100 ) {
 				pmPct = 100;
 			}
-			html += '<div class="phase-marker-line" style="left:' + pmPct.toFixed( 2 ) + '%" title="' + esc( pm.name ) + ' @ ' + ( pm.offset_ns / 1e6 ).toFixed( 1 ) + ' ms"></div>';
+			html += '<div class="phase-marker-line" style="left:' + pmPct.toFixed( 2 ) + '%;top:-' + lineTopPx + 'px" title="' + esc( pm.name ) + ' @ ' + ( pm.offset_ns / 1e6 ).toFixed( 1 ) + ' ms"></div>';
 		}
-
 		// Group timeline entries by source for a cleaner view.
 		var bySource = {};
 		for ( var t = 0; t < timeline.length; t++ ) {
