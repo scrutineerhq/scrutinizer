@@ -98,21 +98,28 @@ spl_autoload_register(
 /**
  * Plugin activation callback.
  *
- * Creates the profiles database table.
+ * Creates the profiles database table and schedules cleanup cron.
  */
 function scrutinizer_activate() {
 	\Scrutinizer\Profiler\Storage::create_table();
+
+	// Schedule twice-daily profile cleanup if not already scheduled.
+	if ( ! wp_next_scheduled( 'scrutinizer_cleanup_profiles' ) ) {
+		wp_schedule_event( time(), 'twicedaily', 'scrutinizer_cleanup_profiles' );
+	}
 }
 register_activation_hook( __FILE__, 'scrutinizer_activate' );
 
 /**
  * Plugin deactivation callback.
  *
- * Stops any active profiling session and cleans up API credentials.
+ * Stops any active profiling session, cleans up API credentials,
+ * and removes the cleanup cron schedule.
  */
 function scrutinizer_deactivate() {
 	\Scrutinizer\Profiler\Session::stop_session();
 	\Scrutinizer\Api\ApplicationPassword::deactivate();
+	wp_clear_scheduled_hook( 'scrutinizer_cleanup_profiles' );
 }
 register_deactivation_hook( __FILE__, 'scrutinizer_deactivate' );
 
@@ -182,8 +189,27 @@ function scrutinizer_admin_init() {
 	\Scrutinizer\Profiler\Storage::maybe_upgrade_table();
 	\Scrutinizer\Api\RestApi::register();
 	\Scrutinizer\Api\ApplicationPassword::register();
+
+	// Ensure cleanup cron is scheduled (covers upgrades from older versions).
+	if ( ! wp_next_scheduled( 'scrutinizer_cleanup_profiles' ) ) {
+		wp_schedule_event( time(), 'twicedaily', 'scrutinizer_cleanup_profiles' );
+	}
 }
 add_action( 'plugins_loaded', 'scrutinizer_admin_init' );
+
+/**
+ * Handle profile cleanup cron event.
+ *
+ * Runs on `scrutinizer_cleanup_profiles` (twice daily).
+ * Uses configurable retention options. Pinned profiles are always kept.
+ */
+function scrutinizer_run_cleanup() {
+	$retention_days = (int) get_option( 'scrutinizer_retention_days', 30 );
+	$max_per_route  = (int) get_option( 'scrutinizer_max_per_route', 100 );
+
+	\Scrutinizer\Profiler\Storage::cleanup_profiles( $retention_days, $max_per_route );
+}
+add_action( 'scrutinizer_cleanup_profiles', 'scrutinizer_run_cleanup' );
 
 /**
  * Register WP-CLI commands.

@@ -46,6 +46,7 @@ class Storage {
 			is_pinned tinyint(1) NOT NULL DEFAULT 0,
 			note text NOT NULL,
 			tags varchar(255) NOT NULL DEFAULT '',
+			response_status smallint(5) unsigned DEFAULT NULL,
 			is_baseline tinyint(1) NOT NULL DEFAULT 0,
 			baseline_name varchar(255) NOT NULL DEFAULT '',
 			PRIMARY KEY  (id),
@@ -53,7 +54,8 @@ class Storage {
 			KEY profile_type (profile_type),
 			KEY route_key (route_key),
 			KEY is_pinned (is_pinned),
-			KEY is_baseline (is_baseline)
+			KEY is_baseline (is_baseline),
+			KEY response_status (response_status)
 		) {$charset};";
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -74,12 +76,13 @@ class Storage {
 	/**
 	 * Save a profile.
 	 *
-	 * @param string $session_id    Session identifier (empty for background).
-	 * @param array  $profile_data  Compiled profile data.
-	 * @param string $profile_type  'session' or 'background'.
+	 * @param string $session_id     Session identifier (empty for background).
+	 * @param array  $profile_data   Compiled profile data.
+	 * @param string $profile_type   'session' or 'background'.
+	 * @param int    $response_status HTTP response status code (0 if unknown).
 	 * @return int|false  Inserted row ID or false on failure.
 	 */
-	public static function save_profile( $session_id, $profile_data, $profile_type = 'session' ) {
+	public static function save_profile( $session_id, $profile_data, $profile_type = 'session', $response_status = 0 ) {
 		global $wpdb;
 
 		$url          = isset( $profile_data['request']['url'] ) ? $profile_data['request']['url'] : '';
@@ -93,21 +96,29 @@ class Storage {
 		// AJAX requests get action-specific keys: POST:ajax:heartbeat.
 		$route_key = self::normalize_route_key( $method, $url, $ajax_action );
 
+		$insert_data = array(
+			'session_id'      => $session_id,
+			'profile_type'    => $profile_type,
+			'request_url'     => $url,
+			'request_method'  => $method,
+			'route_class'     => $route,
+			'route_key'       => $route_key,
+			'duration_ns'     => $dur_ns,
+			'user_role'       => $role,
+			'profile_data'    => wp_json_encode( $profile_data ),
+			'captured_at'     => current_time( 'mysql' ),
+		);
+		$insert_format = array( '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s' );
+
+		if ( $response_status > 0 ) {
+			$insert_data['response_status'] = (int) $response_status;
+			$insert_format[]                = '%d';
+		}
+
 		$result = $wpdb->insert(
 			self::table_name(),
-			array(
-				'session_id'     => $session_id,
-				'profile_type'   => $profile_type,
-				'request_url'    => $url,
-				'request_method' => $method,
-				'route_class'    => $route,
-				'route_key'      => $route_key,
-				'duration_ns'    => $dur_ns,
-				'user_role'      => $role,
-				'profile_data'   => wp_json_encode( $profile_data ),
-				'captured_at'    => current_time( 'mysql' ),
-			),
-			array( '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s' )
+			$insert_data,
+			$insert_format
 		);
 
 		if ( false === $result ) {
@@ -314,12 +325,21 @@ class Storage {
 	/**
 	 * Auto-prune unpinned profiles for a route, keeping the most recent N.
 	 *
+	 * Uses the configurable retention max-per-route option.
+	 *
 	 * @param string $route_key  Normalized route key.
-	 * @param int    $keep       Number of unpinned profiles to keep per route.
+	 * @param int    $keep       Number of unpinned profiles to keep per route (0 = use option).
 	 * @return int  Number of profiles deleted.
 	 */
-	public static function auto_prune( $route_key, $keep = 50 ) {
+	public static function auto_prune( $route_key, $keep = 0 ) {
 		global $wpdb;
+
+		if ( 0 === $keep ) {
+			$keep = (int) get_option( 'scrutinizer_max_per_route', 100 );
+		}
+		if ( $keep <= 0 ) {
+			return 0; // Unlimited.
+		}
 
 		$table = self::table_name();
 
@@ -359,6 +379,55 @@ class Storage {
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return $deleted;
+	}
+
+	/**
+	 * Clean up profiles based on retention policy.
+	 *
+	 * Deletes unpinned profiles older than $retention_days and trims
+	 * to $max_per_route per route key. Pinned profiles are always kept.
+	 *
+	 * @param int $retention_days  Delete profiles older than this many days (0 = no age limit).
+	 * @param int $max_per_route   Keep at most this many unpinned profiles per route (0 = unlimited).
+	 * @return array{expired: int, trimmed: int}
+	 */
+	public static function cleanup_profiles( $retention_days = 0, $max_per_route = 0 ) {
+		global $wpdb;
+
+		$table   = self::table_name();
+		$expired = 0;
+		$trimmed = 0;
+
+		// Step 1: Delete unpinned profiles older than retention_days.
+		if ( $retention_days > 0 ) {
+			$cutoff_date = gmdate( 'Y-m-d H:i:s', time() - ( $retention_days * DAY_IN_SECONDS ) );
+
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$expired = (int) $wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM {$table} WHERE is_pinned = 0 AND captured_at < %s",
+					$cutoff_date
+				)
+			);
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		}
+
+		// Step 2: Trim per-route excess.
+		if ( $max_per_route > 0 ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$routes = $wpdb->get_col( "SELECT DISTINCT route_key FROM {$table}" );
+
+			if ( is_array( $routes ) ) {
+				foreach ( $routes as $route_key ) {
+					$trimmed += self::auto_prune( $route_key, $max_per_route );
+				}
+			}
+		}
+
+		return array(
+			'expired' => $expired,
+			'trimmed' => $trimmed,
+		);
 	}
 
 	/**
@@ -579,12 +648,13 @@ class Storage {
 	 *
 	 * Returns one row per unique route_key with aggregate stats.
 	 *
-	 * @param string $profile_type  Filter by profile type ('session', 'background', or '' for all).
-	 * @param string $session_id    Filter by session ID (empty for all).
-	 * @param int    $limit         Maximum groups to return.
+	 * @param string $profile_type    Filter by profile type ('session', 'background', or '' for all).
+	 * @param string $session_id      Filter by session ID (empty for all).
+	 * @param int    $limit           Maximum groups to return.
+	 * @param string $status_filter   Response status filter: '2xx', '4xx', or '' for all.
 	 * @return array
 	 */
-	public static function get_profiles_grouped( $profile_type = '', $session_id = '', $limit = 100 ) {
+	public static function get_profiles_grouped( $profile_type = '', $session_id = '', $limit = 100, $status_filter = '' ) {
 		global $wpdb;
 
 		$table = self::table_name();
@@ -616,7 +686,11 @@ class Storage {
 				MAX(captured_at) AS last_captured,
 				MIN(captured_at) AS first_captured,
 				GROUP_CONCAT(DISTINCT profile_type) AS profile_types,
-				AVG(JSON_EXTRACT(profile_data, '$.summary.query_count')) AS avg_query_count
+				AVG(JSON_EXTRACT(profile_data, '$.summary.query_count')) AS avg_query_count,
+				SUM(CASE WHEN response_status >= 200 AND response_status < 300 THEN 1 ELSE 0 END) AS count_2xx,
+				SUM(CASE WHEN response_status >= 400 AND response_status < 500 THEN 1 ELSE 0 END) AS count_4xx,
+				SUM(CASE WHEN response_status >= 500 THEN 1 ELSE 0 END) AS count_5xx,
+				MAX(JSON_UNQUOTE(JSON_EXTRACT(profile_data, '$.request.label'))) AS route_label
 			FROM {$table}
 			WHERE {$where_sql}
 			GROUP BY route_key, route_class, request_method
@@ -627,8 +701,28 @@ class Storage {
 			$sql = $wpdb->prepare( $sql, $args );
 		}
 
-		return $wpdb->get_results( $sql, ARRAY_A );
+		$results = $wpdb->get_results( $sql, ARRAY_A );
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+
+		// Apply status filter in PHP since it operates on aggregates.
+		if ( ! empty( $status_filter ) && is_array( $results ) ) {
+			$results = array_values(
+				array_filter(
+					$results,
+					function ( $row ) use ( $status_filter ) {
+						if ( '2xx' === $status_filter ) {
+							return (int) $row['count_2xx'] > 0;
+						}
+						if ( '4xx' === $status_filter ) {
+							return (int) $row['count_2xx'] === 0 && (int) $row['count_4xx'] > 0;
+						}
+						return true;
+					}
+				)
+			);
+		}
+
+		return $results;
 	}
 
 	/**
@@ -676,17 +770,26 @@ class Storage {
 	}
 
 	/**
-	 * Get table statistics (row count and data size in bytes).
+	 * Get table statistics.
 	 *
-	 * @return array{rows: int, size_bytes: int}
+	 * @return array{rows: int, route_count: int, pinned_count: int, oldest: string|null, size_bytes: int}
 	 */
 	public static function get_table_stats() {
 		global $wpdb;
 
 		$table = self::table_name();
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$stats = $wpdb->get_row(
+			"SELECT
+				COUNT(*) AS total_rows,
+				COUNT(DISTINCT route_key) AS route_count,
+				SUM(CASE WHEN is_pinned = 1 THEN 1 ELSE 0 END) AS pinned_count,
+				MIN(captured_at) AS oldest
+			FROM {$table}",
+			ARRAY_A
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$size = $wpdb->get_row(
@@ -700,8 +803,11 @@ class Storage {
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return array(
-			'rows'       => $count,
-			'size_bytes' => isset( $size['size_bytes'] ) ? (int) $size['size_bytes'] : 0,
+			'rows'         => isset( $stats['total_rows'] ) ? (int) $stats['total_rows'] : 0,
+			'route_count'  => isset( $stats['route_count'] ) ? (int) $stats['route_count'] : 0,
+			'pinned_count' => isset( $stats['pinned_count'] ) ? (int) $stats['pinned_count'] : 0,
+			'oldest'       => isset( $stats['oldest'] ) ? $stats['oldest'] : null,
+			'size_bytes'   => isset( $size['size_bytes'] ) ? (int) $size['size_bytes'] : 0,
 		);
 	}
 
@@ -747,6 +853,11 @@ class Storage {
 		if ( ! in_array( 'tags', $columns, true ) ) {
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$wpdb->query( "ALTER TABLE {$table} ADD COLUMN tags varchar(255) NOT NULL DEFAULT '' AFTER note" );
+		}
+
+		if ( ! in_array( 'response_status', $columns, true ) ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$wpdb->query( "ALTER TABLE {$table} ADD COLUMN response_status smallint(5) unsigned DEFAULT NULL AFTER captured_at, ADD KEY response_status (response_status)" );
 		}
 	}
 }
