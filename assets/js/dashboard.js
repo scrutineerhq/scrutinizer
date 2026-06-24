@@ -447,13 +447,17 @@
 	/* ------------------------------------------------------------------ */
 
 	function renderTopTabs() {
-		var html = '<div class="scrutinizer-top-tabs">';
+		var html = '<div class="scrutinizer-top-tabs" id="scrutinizer-top-tabs">';
 		html += '<button class="scrutinizer-top-tab active" data-top-tab="routes">' + esc( scrutinizerAdmin.i18n.routes || 'Routes' ) + '</button>';
 		html += '<button class="scrutinizer-top-tab" data-top-tab="history">' + esc( scrutinizerAdmin.i18n.history || 'History' ) + '</button>';
 		html += '<button class="scrutinizer-top-tab" data-top-tab="cron">' + esc( scrutinizerAdmin.i18n.cron || 'Cron' ) + '</button>';
 		html += '<button class="scrutinizer-top-tab" data-top-tab="api">' + esc( scrutinizerAdmin.i18n.api || 'API' ) + '</button>';
 		html += '</div>';
-		$( '#scrutinizer-results h2' ).replaceWith( html );
+
+		// Insert tabs BEFORE #scrutinizer-results so they stay visible
+		// when individual content containers are hidden/shown.
+		$( '#scrutinizer-results h2' ).remove();
+		$( '#scrutinizer-results' ).before( html );
 	}
 
 	/* ------------------------------------------------------------------ */
