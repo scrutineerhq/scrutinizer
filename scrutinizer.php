@@ -184,3 +184,15 @@ function scrutinizer_admin_init() {
 	\Scrutinizer\Api\ApplicationPassword::register();
 }
 add_action( 'plugins_loaded', 'scrutinizer_admin_init' );
+
+/**
+ * Register WP-CLI commands.
+ */
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	add_action(
+		'cli_init',
+		function () {
+			\WP_CLI::add_command( 'scrutinizer', 'Scrutinizer\\Cli\\Commands' );
+		}
+	);
+}

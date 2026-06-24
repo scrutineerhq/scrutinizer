@@ -656,6 +656,56 @@ class Storage {
 	}
 
 	/**
+	 * Delete all profiles, optionally keeping pinned ones.
+	 *
+	 * @param bool $keep_pinned  Whether to preserve pinned profiles.
+	 * @return int  Number of rows deleted.
+	 */
+	public static function delete_all_profiles( $keep_pinned = false ) {
+		global $wpdb;
+
+		$table = self::table_name();
+
+		if ( $keep_pinned ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			return (int) $wpdb->query( "DELETE FROM {$table} WHERE is_pinned = 0" );
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->query( "DELETE FROM {$table}" );
+	}
+
+	/**
+	 * Get table statistics (row count and data size in bytes).
+	 *
+	 * @return array{rows: int, size_bytes: int}
+	 */
+	public static function get_table_stats() {
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$size = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT data_length + index_length AS size_bytes FROM information_schema.TABLES WHERE table_schema = %s AND table_name = %s",
+				DB_NAME,
+				$table
+			),
+			ARRAY_A
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		return array(
+			'rows'       => $count,
+			'size_bytes' => isset( $size['size_bytes'] ) ? (int) $size['size_bytes'] : 0,
+		);
+	}
+
+	/**
 	 * Upgrade the table schema to add new columns.
 	 *
 	 * Safe to call repeatedly — checks column existence before altering.

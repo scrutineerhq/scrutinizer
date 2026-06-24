@@ -19,12 +19,13 @@
 - [x] Page grouping — route_key normalization for grouped route view
 - [x] By-reference callback detection — skip callbacks with `&$param` via Reflection
 
-## M2 — Deep Mode, Diagnostics, and Timeline (current)
+## M2 — Deep Mode, Diagnostics, and Timeline ✅ Complete
 
 - [x] Request timeline — horizontal bar visualization, plugin-colored segments, lifecycle phase markers
 - [x] Lifecycle phase markers — hrtime snapshots at 25 WP hooks (early boot through shutdown)
 - [x] Lollipop milestone markers — tiered vertical stem + dot + label, overlap prevention
 - [x] Deep mode: query detail — individual SQL queries with time and caller via SAVEQUERIES
+- [x] Query profiling toggle — auto-enable SAVEQUERIES, three-state UI (controllable/forced on/forced off)
 - [x] Query sanitization — structure-preserving, replaces literals with placeholders, collapses IN/VALUES
 - [x] Query count metric card — always via $wpdb->num_queries
 - [x] User role capture — wp_get_current_user() per request, role pill badges
@@ -43,18 +44,18 @@
 - [x] Hook Execution Trace — nested callback visualization with collapsible tree, filter, timing bars
 - [x] Network call timeline — HTTP call lollipops (individual markers), query density heatmap strip (60-bucket clustering), I/O summary counts
 
-## M2.5 — AI Agent API & Secure Sharing (NEW — designed June 23, 2026)
+## M2.5 — AI Agent API & Secure Sharing
 
 Full spec at `workspace/your_files/scrutineer-api-spec.md`. Panel review at `workspace/your_files/scrutineer-api-panel-review.md`.
 
-### API Foundation
-- [ ] REST API endpoint registration (`/v1/prompt`, `/v1/diagnostics`, `/v1/routes`, `/v1/profile/{id}`, `/v1/compare/{a}/{b}`)
-- [ ] Diagnostics data collector (§4.1 always-included + §4.2 opt-in fields)
-- [ ] Hard sanitization pass (§4.3 — paths, creds, IPs stripped before any output)
-- [ ] Diagnostics sharing checkbox panel + WP option storage
-- [ ] `/v1/prompt` content — measurement contract, tone rules, endpoint schemas, boundaries
-- [ ] Scoped auto-created Application Passwords (§6 — 24h TTL, restricted to scrutinizer/v1/*)
-- [ ] "Send to Agent" button — auto-creates password, copies one-liner to clipboard
+### API Foundation ✅ Complete
+- [x] REST API endpoint registration (`/v1/prompt`, `/v1/diagnostics`, `/v1/routes`, `/v1/profile/{id}`, `/v1/compare/{a}/{b}`)
+- [x] Diagnostics data collector (§4.1 always-included + §4.2 opt-in fields)
+- [x] Hard sanitization pass (§4.3 — paths, creds, IPs stripped before any output)
+- [x] Diagnostics sharing checkbox panel + WP option storage
+- [x] `/v1/prompt` content — measurement contract, tone rules, endpoint schemas, boundaries
+- [x] Scoped auto-created Application Passwords (§6 — 24h TTL, restricted to scrutinizer/v1/*)
+- [x] "Send to Agent" button — auto-creates password, copies one-liner to clipboard
 
 ### Secure Sharing Relay
 - [ ] scrutinizer.dev CF Worker — KV storage, capability URLs
@@ -73,16 +74,16 @@ Full spec at `workspace/your_files/scrutineer-api-spec.md`. Panel review at `wor
 - [ ] Responsive design, dark/light mode, print-friendly
 - [ ] Referrer-Policy: no-referrer
 
-### TODO
-- [ ] Add PANEL.md to .context/ with standing review panel personas
+## M3 — Compare Workflow & Regression Language
 
-## M3 — Baselines and Regression Language
+Comparison infrastructure exists (M2 compare view). This milestone improves the workflow — making it easy to pick comparison targets and adding guardrails to the language used.
 
-- [ ] Named baselines — save current profile set as a named reference
-- [ ] Route-matched comparison — match by fingerprint, not URL
-- [ ] Regression classification — 5+ matches, 20%+100ms, 3/5 consistent
-- [ ] Compare view — side-by-side timeline, delta summary
-- [ ] Messaging enforcement — "slower" not "slow," "associated with" not "caused by"
+- [ ] Comparison target picker — select any pinned profile as the "compare against" reference from the detail view
+- [ ] Route-matched suggestions — when viewing a profile, suggest pinned profiles on the same route as comparison candidates
+- [ ] Inline comparison — expand delta view within the profile detail, not just side-by-side
+- [ ] Regression language enforcement — "slower" not "slow," "associated with" not "caused by," "correlated" not "caused"
+- [ ] Delta thresholds — highlight meaningful changes (>20% and >100ms), downplay noise (<5% or <10ms)
+- [ ] Schema cleanup — drop `is_baseline` and `baseline_name` columns (cruft from an earlier design that was never implemented)
 
 ## M4 — Report Sharing (ABSORBED into M2.5)
 
@@ -101,16 +102,12 @@ Sharing architecture redesigned June 23, 2026. Zero-knowledge relay pulled into 
 
 - [ ] Yoke integration — on-demand external diagnostics panel
 - [ ] Attribution display — `via ns.lol ↗` / `via certs.lol ↗` links
-- [ ] WP-CLI: `wp scrutinizer list` — list saved profiles
-- [ ] WP-CLI: `wp scrutinizer show <id>` — display profile detail
-- [ ] WP-CLI: `wp scrutinizer delete <id>` — delete profile
-- [ ] WP-CLI: `wp scrutinizer export <id>` — export profile as JSON
-- [ ] WP-CLI: `wp scrutinizer baseline list` — list baselines
-- [ ] WP-CLI: `wp scrutinizer baseline save <name>` — save current as baseline
-- [ ] WP-CLI: `wp scrutinizer baseline delete <name>` — remove baseline
-- [ ] WP-CLI: `wp scrutinizer baseline compare <name>` — compare against baseline
-- [ ] WP-CLI: `wp scrutinizer clear` — delete all profiles
-- [ ] WP-CLI: `wp scrutinizer status` — profiler state summary
+- [x] WP-CLI: `wp scrutinizer list` — list saved profiles with filters
+- [x] WP-CLI: `wp scrutinizer show <id>` — display profile detail
+- [x] WP-CLI: `wp scrutinizer delete <id>` — delete profile
+- [x] WP-CLI: `wp scrutinizer export <id>` — export profile as JSON
+- [x] WP-CLI: `wp scrutinizer clear` — delete all profiles
+- [x] WP-CLI: `wp scrutinizer status` — profiler state summary
 
 ## M6 — Polish and wp.org Submission
 
@@ -118,6 +115,7 @@ Sharing architecture redesigned June 23, 2026. Zero-knowledge relay pulled into 
 - [ ] wp.org plugin readme (readme.txt with screenshots, FAQ, changelog)
 - [ ] Screenshot preparation
 - [ ] Security audit — activation flow, cookie handling, CSRF, nonce validation
+- [ ] Schema cleanup — drop `is_baseline` and `baseline_name` columns
 - [ ] Hosted infrastructure — Workers, R2, D1, DO, KV, WAF at scrutineer.dev
 - [ ] wp.org submission
 
