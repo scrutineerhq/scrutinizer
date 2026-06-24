@@ -12,6 +12,8 @@
 
 namespace Scrutinizer\Api;
 
+use Scrutinizer\Profiler\QueryReducer;
+
 /**
  * Recursively sanitize data structures for external output.
  */
@@ -156,50 +158,15 @@ class Sanitizer {
 	 * but this ensures no query structure leaks even from old data
 	 * or direct DB access.
 	 *
-	 * @see .context/INVARIANTS.md "SQL query reduction" invariant.
+	 * Delegates to the shared QueryReducer tokenizer which handles
+	 * both already-reduced and unreduced input correctly.
 	 *
-	 * @param string $sql  Raw or pre-reduced SQL string.
-	 * @return string  Reduced "VERB table[, table2]" string.
+	 * @see QueryReducer::reduce()
+	 *
+	 * @param string $sql Raw or pre-reduced SQL string.
+	 * @return string Reduced "VERB table[, table2]" string.
 	 */
 	public static function sanitize_sql( $sql ) {
-		$sql = trim( $sql );
-
-		// If no SQL structural keywords are present, the query is already
-		// reduced (verb + table list only). Pass through without re-parsing.
-		// This lets already-reduced data from Profiler::sanitize_query survive
-		// the defense-in-depth pass, while old profiles with full query
-		// structure (containing FROM, WHERE, JOIN, etc.) get properly reduced.
-		if ( ! preg_match( '/\b(FROM|WHERE|JOIN|INTO|SET|ORDER|GROUP|HAVING|LIMIT|VALUES|COLUMNS)\b/i', $sql ) ) {
-			return $sql;
-		}
-		if ( false !== stripos( $sql, 'FOUND_ROWS' ) ) {
-			return 'SELECT FOUND_ROWS()';
-		}
-
-		if ( ! preg_match( '/^\s*(\w+)/i', $sql, $m ) ) {
-			return '(query)';
-		}
-		$verb = strtoupper( $m[1] );
-
-		if ( 'SHOW' === $verb ) {
-			if ( preg_match( '/SHOW\s+\w+\s+FROM\s+`?(\w+)`?/i', $sql, $m ) ) {
-				return 'SHOW ' . $m[1];
-			}
-			return 'SHOW';
-		}
-
-		$tables = array();
-		if ( preg_match_all( '/\b(?:FROM|JOIN|INTO|UPDATE)\s+`?(\w+)`?/i', $sql, $matches ) ) {
-			foreach ( $matches[1] as $t ) {
-				$tables[] = $t;
-			}
-		}
-		$tables = array_values( array_unique( $tables ) );
-
-		if ( empty( $tables ) ) {
-			return $verb;
-		}
-
-		return $verb . ' ' . implode( ', ', $tables );
+		return QueryReducer::reduce( $sql );
 	}
 }
