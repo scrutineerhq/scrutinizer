@@ -690,61 +690,15 @@ class Profiler {
 	/**
 	 * Reduce a SQL query to verb + table name(s) only.
 	 *
-	 * INVARIANT: No fields, WHERE clauses, predicates (LIMIT, HAVING,
-	 * GROUP BY, ORDER BY), or literal values ever leave this function.
-	 * Only the SQL verb and the table name(s) are kept. JOINs include
-	 * all participating tables.
+	 * Delegates to QueryReducer for tokenizer-based extraction.
 	 *
-	 * Examples:
-	 *   "SELECT option_value FROM wp_options WHERE ..."           → "SELECT wp_options"
-	 *   "SELECT ... FROM wp_terms JOIN wp_term_taxonomy JOIN ..." → "SELECT wp_terms, wp_term_taxonomy, ..."
-	 *   "INSERT INTO wp_postmeta ..."                             → "INSERT wp_postmeta"
-	 *   "UPDATE wp_posts SET ..."                                 → "UPDATE wp_posts"
-	 *   "SHOW COLUMNS FROM wp_scrutinizer_profiles"               → "SHOW wp_scrutinizer_profiles"
-	 *   "SELECT FOUND_ROWS()"                                     → "SELECT FOUND_ROWS()"
+	 * @see QueryReducer::reduce()
 	 *
-	 * @see .context/INVARIANTS.md "SQL query reduction" invariant.
-	 * @see .context/GOTCHAS.md "Query sanitization must reduce, not mask" entry.
-	 *
-	 * @param string $sql  Raw SQL query.
-	 * @return string  Reduced "VERB table[, table2]" string.
+	 * @param string $sql Raw SQL query.
+	 * @return string Reduced "VERB table[, table2]" string.
 	 */
 	private static function sanitize_query( $sql ) {
-		$sql = trim( $sql );
-
-		// Special: FOUND_ROWS() is a server function with no table.
-		if ( false !== stripos( $sql, 'FOUND_ROWS' ) ) {
-			return 'SELECT FOUND_ROWS()';
-		}
-
-		// Extract the SQL verb.
-		if ( ! preg_match( '/^\s*(\w+)/i', $sql, $m ) ) {
-			return '(query)';
-		}
-		$verb = strtoupper( $m[1] );
-
-		// SHOW: keep only the target table.
-		if ( 'SHOW' === $verb ) {
-			if ( preg_match( '/SHOW\s+\w+\s+FROM\s+`?(\w+)`?/i', $sql, $m ) ) {
-				return 'SHOW ' . $m[1];
-			}
-			return 'SHOW';
-		}
-
-		// Extract table names from FROM, JOIN, INTO, UPDATE clauses.
-		$tables = array();
-		if ( preg_match_all( '/\b(?:FROM|JOIN|INTO|UPDATE)\s+`?(\w+)`?/i', $sql, $matches ) ) {
-			foreach ( $matches[1] as $t ) {
-				$tables[] = $t;
-			}
-		}
-		$tables = array_values( array_unique( $tables ) );
-
-		if ( empty( $tables ) ) {
-			return $verb;
-		}
-
-		return $verb . ' ' . implode( ', ', $tables );
+		return QueryReducer::reduce( $sql );
 	}
 
 	/**
