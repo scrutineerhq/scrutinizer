@@ -154,7 +154,12 @@ class Ajax {
 			$session_id = sanitize_text_field( wp_unslash( $_GET['session_id'] ) );
 		}
 
-		$groups = Storage::get_profiles_grouped( $profile_type, $session_id );
+		$status_filter = '';
+		if ( isset( $_GET['status_filter'] ) ) {
+			$status_filter = sanitize_text_field( wp_unslash( $_GET['status_filter'] ) );
+		}
+
+		$groups = Storage::get_profiles_grouped( $profile_type, $session_id, 100, $status_filter );
 
 		wp_send_json_success( array( 'groups' => $groups ) );
 	}
@@ -203,9 +208,12 @@ class Ajax {
 		}
 
 		$enabled = ! empty( $_POST['enabled'] );
-		$rate    = 5;
+		$rate    = 10.0;
 		if ( isset( $_POST['rate'] ) ) {
-			$rate = max( 1, min( 100, absint( $_POST['rate'] ) ) );
+			$rate = (float) $_POST['rate'];
+			$rate = max( 0.0, min( 100.0, $rate ) );
+			// Round to one decimal place.
+			$rate = round( $rate, 1 );
 		}
 
 		update_option( 'scrutinizer_background_profiling', $enabled, true );

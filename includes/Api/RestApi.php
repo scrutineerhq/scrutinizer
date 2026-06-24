@@ -177,10 +177,14 @@ class RestApi {
 
 			$routes[] = array(
 				'route'              => $route_label,
+				'route_label'        => isset( $group['route_label'] ) ? $group['route_label'] : null,
 				'profile_count'      => (int) $group['request_count'],
 				'latest_profile_id'  => $latest_id,
 				'avg_duration_ms'    => round( (float) $group['avg_duration_ns'] / 1e6, 1 ),
 				'avg_query_count'    => null !== $group['avg_query_count'] ? (int) round( (float) $group['avg_query_count'] ) : null,
+				'count_2xx'          => isset( $group['count_2xx'] ) ? (int) $group['count_2xx'] : 0,
+				'count_4xx'          => isset( $group['count_4xx'] ) ? (int) $group['count_4xx'] : 0,
+				'count_5xx'          => isset( $group['count_5xx'] ) ? (int) $group['count_5xx'] : 0,
 			);
 		}
 

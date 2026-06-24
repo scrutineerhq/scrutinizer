@@ -147,6 +147,8 @@ class Profiler {
 	/**
 	 * Check whether this request should be background-sampled.
 	 *
+	 * Supports float sample rates from 0.0 to 100.0 (e.g. 0.1% for busy sites).
+	 *
 	 * @return bool
 	 */
 	private static function should_background_sample() {
@@ -160,11 +162,20 @@ class Profiler {
 			return false;
 		}
 
-		$rate = (int) get_option( 'scrutinizer_sample_rate', 5 );
-		$rate = max( 1, min( 100, $rate ) ); // Clamp 1-100%.
+		$rate = (float) get_option( 'scrutinizer_sample_rate', 10 );
+		$rate = max( 0.0, min( 100.0, $rate ) );
 
+		if ( $rate <= 0.0 ) {
+			return false;
+		}
+		if ( $rate >= 100.0 ) {
+			return true;
+		}
+
+		// Use mt_rand with enough precision for rates like 0.1%.
+		// Random value 0–100000, rate scaled to same range.
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.rand_mt_rand
-		return mt_rand( 1, 100 ) <= $rate;
+		return mt_rand( 1, 100000 ) <= (int) round( $rate * 1000 );
 	}
 
 	/**
@@ -313,6 +324,12 @@ class Profiler {
 		$end_ns       = hrtime( true );
 		$duration_ns  = $end_ns - $this->request_start_ns;
 
+		// Capture HTTP response status before anything else might change it.
+		$response_status = http_response_code();
+		if ( false === $response_status ) {
+			$response_status = 0;
+		}
+
 		// Guard against negative durations from clock issues.
 		if ( $duration_ns < 0 ) {
 			$duration_ns = 0;
@@ -365,6 +382,8 @@ class Profiler {
 			'ajax_action'        => ( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_REQUEST['action'] ) )
 				? sanitize_text_field( wp_unslash( $_REQUEST['action'] ) )
 				: '',
+			'response_status'    => (int) $response_status,
+			'label'              => self::generate_route_label(),
 		);
 
 		try {
@@ -373,7 +392,7 @@ class Profiler {
 			$report      = Report::compile( $raw_timings, $trace, $metadata );
 
 			$profile_type = $this->is_background ? 'background' : 'session';
-			Storage::save_profile( $session_id, $report, $profile_type );
+			Storage::save_profile( $session_id, $report, $profile_type, (int) $response_status );
 		} catch ( \Throwable $e ) {
 			// Fail silently — never break the site.
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -381,6 +400,97 @@ class Profiler {
 				error_log( 'Scrutinizer profiler error: ' . $e->getMessage() );
 			}
 		}
+	}
+
+	/**
+	 * Generate a human-readable label for the current request.
+	 *
+	 * Used for F9 (two-line route labels in the UI). Stored in
+	 * profile_data['request']['label'] and surfaced in grouped route listings.
+	 *
+	 * @return string|null  Human-readable label or null for fallback.
+	 */
+	private static function generate_route_label() {
+		// AJAX requests: use the action name.
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+			$action = isset( $_REQUEST['action'] )
+				? sanitize_text_field( wp_unslash( $_REQUEST['action'] ) )
+				: '';
+			return $action ? 'AJAX: ' . $action : null;
+		}
+
+		// REST API requests.
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			global $wp;
+			if ( ! empty( $wp->query_vars['rest_route'] ) ) {
+				return 'REST: ' . $wp->query_vars['rest_route'];
+			}
+			return 'REST API';
+		}
+
+		// WP Login page.
+		if ( isset( $GLOBALS['pagenow'] ) && 'wp-login.php' === $GLOBALS['pagenow'] ) {
+			return 'Login';
+		}
+
+		// Admin pages: use the page title.
+		if ( is_admin() ) {
+			// Try the specific admin page title first.
+			if ( function_exists( 'get_admin_page_title' ) ) {
+				$title = get_admin_page_title();
+				if ( ! empty( $title ) ) {
+					return $title;
+				}
+			}
+
+			// Fallback to the global $title set by WP admin.
+			global $title;
+			if ( ! empty( $title ) ) {
+				return $title;
+			}
+
+			return null;
+		}
+
+		// Frontend: singular content.
+		if ( function_exists( 'is_singular' ) && is_singular() ) {
+			$post_title = get_the_title();
+			if ( ! empty( $post_title ) ) {
+				return $post_title;
+			}
+		}
+
+		// Frontend: archives.
+		if ( function_exists( 'is_archive' ) && is_archive() ) {
+			if ( function_exists( 'get_the_archive_title' ) ) {
+				$archive_title = get_the_archive_title();
+				if ( ! empty( $archive_title ) ) {
+					return $archive_title;
+				}
+			}
+		}
+
+		// Frontend: search.
+		if ( function_exists( 'is_search' ) && is_search() ) {
+			return 'Search';
+		}
+
+		// Frontend: home/blog page.
+		if ( function_exists( 'is_home' ) && is_home() ) {
+			return 'Blog';
+		}
+
+		// Frontend: front page.
+		if ( function_exists( 'is_front_page' ) && is_front_page() ) {
+			return 'Front Page';
+		}
+
+		// Frontend: 404.
+		if ( function_exists( 'is_404' ) && is_404() ) {
+			return 'Not Found';
+		}
+
+		return null;
 	}
 
 	/**
