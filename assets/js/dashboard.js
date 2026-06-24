@@ -168,6 +168,15 @@
 			var tab = $( this ).data( 'tab' );
 			$( '.scrutinizer-tab' ).removeClass( 'active' );
 			$( this ).addClass( 'active' );
+
+		// Info bubble toggle (mobile-friendly tooltip).
+		$( document ).on( 'click', '.scrutinizer-info-toggle', function( e ) {
+			e.stopPropagation();
+			$( this ).next( '.scrutinizer-info-bubble' ).toggleClass( 'visible' );
+		});
+		$( document ).on( 'click', function() {
+			$( '.scrutinizer-info-bubble' ).removeClass( 'visible' );
+		});
 			$( '.scrutinizer-tab-content' ).hide();
 			$( '#scrutinizer-tab-' + tab ).show();
 		} );
@@ -719,11 +728,13 @@
 				maxTier = labelTiers[ lt ];
 			}
 		}
-		// Each tier is 24px: 14px label + 10px spacing.
-		var milestoneHeight = ( maxTier + 1 ) * 24 + 12;
+		// Each tier is 32px. Base offset 20px so lowest pop clears the bar.
+		var tierPx = 32;
+		var baseOffset = 20;
+		var milestoneHeight = ( maxTier + 1 ) * tierPx + baseOffset + 16;
 		html += '<div class="scrutinizer-milestones" style="height:' + milestoneHeight + 'px">';
 		for ( var lk = 0; lk < labelPositions.length; lk++ ) {
-			var stemHeight = ( labelTiers[ lk ] + 1 ) * 24;
+			var stemHeight = ( labelTiers[ lk ] + 1 ) * tierPx + baseOffset;
 			var leftPct    = labelPositions[ lk ].pct.toFixed( 2 );
 			// Vertical stem from bottom, with dot at top and label above dot.
 			html += '<div class="milestone" style="left:' + leftPct + '%;height:' + stemHeight + 'px">';
@@ -847,7 +858,8 @@
 				html += '<span class="legend-swatch" style="background:' + color + '"></span>';
 				html += esc( lt ) + ': ' + breakdown[ lt ].ms + ' ms (' + breakdown[ lt ].percent + '%)';
 				if ( 'unattributed' === lt ) {
-					html += ' <span class="scrutinizer-info-tooltip" title="Time spent in PHP bootstrap, autoloaders, database connections, WordPress core initialization, and opcode compilation — before hooks fire. This is normal overhead, not a problem to solve.">ⓘ</span>';
+					html += ' <button type="button" class="scrutinizer-info-toggle" aria-label="What is unattributed time?">ⓘ</button>';
+					html += '<span class="scrutinizer-info-bubble">Time spent in PHP bootstrap, autoloaders, database connections, WordPress core initialization, and opcode compilation — before hooks fire. This is normal overhead, not a problem to solve.</span>';
 				}
 				html += '</span>';
 			}
