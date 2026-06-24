@@ -1033,3 +1033,16 @@
 	color: #d63638 !important;
 	font-weight: 600;
 }
+
+/* ------------------------------------------------------------------ */
+/*  Memory observations                                                */
+/* ------------------------------------------------------------------ */
+
+.scrutinizer-mem-high {
+	color: #d63638 !important;
+	font-weight: 600;
+}
+
+.scrutinizer-mem-freed {
+	color: #00a32a !important;
+}

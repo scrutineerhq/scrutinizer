@@ -452,6 +452,21 @@ class Storage {
 		$qc_a = isset( $sum_a['query_count'] ) ? (int) $sum_a['query_count'] : 0;
 		$qc_b = isset( $sum_b['query_count'] ) ? (int) $sum_b['query_count'] : 0;
 
+		$mem_peak_a = isset( $sum_a['memory_peak'] ) ? (int) $sum_a['memory_peak'] : 0;
+		$mem_peak_b = isset( $sum_b['memory_peak'] ) ? (int) $sum_b['memory_peak'] : 0;
+		$mem_alloc_a = isset( $sum_a['memory_allocated'] ) ? (int) $sum_a['memory_allocated'] : 0;
+		$mem_alloc_b = isset( $sum_b['memory_allocated'] ) ? (int) $sum_b['memory_allocated'] : 0;
+
+		// Fallback for older profiles that stored memory_peak in request.
+		if ( 0 === $mem_peak_a ) {
+			$req_a     = isset( $a['profile_data']['request'] ) ? $a['profile_data']['request'] : array();
+			$mem_peak_a = isset( $req_a['memory_peak'] ) ? (int) $req_a['memory_peak'] : 0;
+		}
+		if ( 0 === $mem_peak_b ) {
+			$req_b     = isset( $b['profile_data']['request'] ) ? $b['profile_data']['request'] : array();
+			$mem_peak_b = isset( $req_b['memory_peak'] ) ? (int) $req_b['memory_peak'] : 0;
+		}
+
 		// Build per-source breakdown comparison.
 		$sources_a = self::index_sources( isset( $a['profile_data']['sources'] ) ? $a['profile_data']['sources'] : array() );
 		$sources_b = self::index_sources( isset( $b['profile_data']['sources'] ) ? $b['profile_data']['sources'] : array() );
@@ -461,10 +476,15 @@ class Storage {
 		foreach ( $all_keys as $key ) {
 			$ea = isset( $sources_a[ $key ] ) ? (int) $sources_a[ $key ]['exclusive_ns'] : 0;
 			$eb = isset( $sources_b[ $key ] ) ? (int) $sources_b[ $key ]['exclusive_ns'] : 0;
+			$ma = isset( $sources_a[ $key ] ) ? (int) $sources_a[ $key ]['memory_delta'] : 0;
+			$mb = isset( $sources_b[ $key ] ) ? (int) $sources_b[ $key ]['memory_delta'] : 0;
 			$source_deltas[ $key ] = array(
-				'a_ns'    => $ea,
-				'b_ns'    => $eb,
-				'delta_ns' => $eb - $ea,
+				'a_ns'       => $ea,
+				'b_ns'       => $eb,
+				'delta_ns'   => $eb - $ea,
+				'a_mem'      => $ma,
+				'b_mem'      => $mb,
+				'delta_mem'  => $mb - $ma,
 			);
 		}
 
@@ -484,6 +504,12 @@ class Storage {
 				'query_count_a'    => $qc_a,
 				'query_count_b'    => $qc_b,
 				'query_count_delta' => $qc_b - $qc_a,
+				'memory_peak_a'    => $mem_peak_a,
+				'memory_peak_b'    => $mem_peak_b,
+				'memory_peak_delta' => $mem_peak_b - $mem_peak_a,
+				'memory_alloc_a'   => $mem_alloc_a,
+				'memory_alloc_b'   => $mem_alloc_b,
+				'memory_alloc_delta' => $mem_alloc_b - $mem_alloc_a,
 				'unattributed_a_ns' => $unattr_a,
 				'unattributed_b_ns' => $unattr_b,
 				'unattributed_delta_ns' => $unattr_b - $unattr_a,

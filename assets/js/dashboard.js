@@ -629,7 +629,8 @@
 		// Metric cards row.
 		html += '<div class="scrutinizer-metric-cards">';
 		html += renderMetricCard( durMs + ' ms', scrutinizerAdmin.i18n.serverDuration, 'primary' );
-		html += renderMetricCard( formatBytes( request.memory_peak || 0 ), 'Peak Memory', 'default' );
+		html += renderMetricCard( formatBytes( summary.memory_peak || request.memory_peak || 0 ), 'Peak Memory', 'default' );
+		html += renderMetricCard( formatBytes( summary.memory_allocated || 0 ), 'Allocated', summary.memory_allocated > 10485760 ? 'warning' : 'default' );
 		html += renderMetricCard( String( queryCount ), 'DB Queries', queryCount > 100 ? 'warning' : 'default' );
 		html += renderMetricCard( String( httpCount ), 'HTTP Calls', httpCount > 0 ? 'warning' : 'default' );
 		html += renderMetricCard( String( summary.callback_count || 0 ), 'Callbacks', 'default' );
@@ -995,6 +996,7 @@
 		html += '<th>Type</th>';
 		html += '<th class="numeric">' + scrutinizerAdmin.i18n.exclusiveTime + '</th>';
 		html += '<th class="numeric">Weight</th>';
+		html += '<th class="numeric">Memory</th>';
 		html += '<th class="numeric">' + scrutinizerAdmin.i18n.inclusiveTime + '</th>';
 		html += '<th class="numeric">' + scrutinizerAdmin.i18n.callCount + '</th>';
 		html += '</tr></thead><tbody>';
@@ -1004,6 +1006,8 @@
 			var exclMs  = ( src.exclusive_ns / 1e6 ).toFixed( 2 );
 			var pct     = ( ( src.exclusive_ns / totalExclNs ) * 100 ).toFixed( 1 );
 			var barColor = getSourceColor( src.slug, src.type );
+			var memDelta = src.memory_delta || 0;
+			var memClass = memDelta > 1048576 ? ' scrutinizer-mem-high' : ( memDelta < 0 ? ' scrutinizer-mem-freed' : '' );
 
 			html += '<tr>';
 			html += '<td>' + esc( src.name || src.slug ) + '</td>';
@@ -1015,6 +1019,7 @@
 			html += '<div class="scrutinizer-weight-bar" style="width:' + pct + '%;background:' + barColor + '"></div>';
 			html += '</div>';
 			html += '</td>';
+			html += '<td class="numeric' + memClass + '">' + formatMemoryDelta( memDelta ) + '</td>';
 			html += '<td class="numeric">' + ( src.inclusive_ns / 1e6 ).toFixed( 2 ) + ' ms</td>';
 			html += '<td class="numeric">' + src.call_count + '</td>';
 			html += '</tr>';
@@ -1184,13 +1189,16 @@
 	/* ------------------------------------------------------------------ */
 
 	function renderMetadata( request, summary ) {
+		var memPeak = summary.memory_peak || request.memory_peak || 0;
+		var memAlloc = summary.memory_allocated || 0;
 		var html = '<table class="scrutinizer-source-table widefat">';
 		html += '<tbody>';
 		html += '<tr><td>Route</td><td>' + esc( request.route_class || '—' ) + '</td></tr>';
 		html += '<tr><td>User Role</td><td>' + rolePill( request.user_role ) + '</td></tr>';
 		html += '<tr><td>PHP</td><td>' + esc( request.php_version || '—' ) + '</td></tr>';
 		html += '<tr><td>WordPress</td><td>' + esc( request.wp_version || '—' ) + '</td></tr>';
-		html += '<tr><td>Peak Memory</td><td>' + formatBytes( request.memory_peak || 0 ) + '</td></tr>';
+		html += '<tr><td>Peak Memory</td><td>' + formatBytes( memPeak ) + '</td></tr>';
+		html += '<tr><td>Allocated by Hooks</td><td>' + formatBytes( memAlloc ) + '</td></tr>';
 		html += '<tr><td>DB Queries</td><td>' + ( summary.query_count || 0 ) + '</td></tr>';
 		html += '<tr><td>HTTP Calls</td><td>' + ( summary.http_call_count || 0 ) + ( summary.http_total_ms > 0 ? ' (' + summary.http_total_ms + ' ms total)' : '' ) + '</td></tr>';
 		html += '<tr><td>Callbacks Observed</td><td>' + ( summary.callback_count || 0 ) + '</td></tr>';
@@ -1609,6 +1617,26 @@
 			delta.query_count_a || 1
 		);
 
+		// Peak memory.
+		if ( delta.memory_peak_a || delta.memory_peak_b ) {
+			html += compareRow( 'Peak Memory',
+				formatBytes( delta.memory_peak_a ),
+				formatBytes( delta.memory_peak_b ),
+				delta.memory_peak_delta,
+				delta.memory_peak_a || 1
+			);
+		}
+
+		// Allocated memory.
+		if ( delta.memory_alloc_a || delta.memory_alloc_b ) {
+			html += compareRow( 'Allocated by Hooks',
+				formatBytes( delta.memory_alloc_a ),
+				formatBytes( delta.memory_alloc_b ),
+				delta.memory_alloc_delta,
+				delta.memory_alloc_a || 1
+			);
+		}
+
 		html += '</tbody></table>';
 
 		// Per-source breakdown.
@@ -1707,6 +1735,20 @@
 		var units = [ 'B', 'KB', 'MB', 'GB' ];
 		var i     = Math.floor( Math.log( bytes ) / Math.log( 1024 ) );
 		return ( bytes / Math.pow( 1024, i ) ).toFixed( 1 ) + ' ' + units[ i ];
+	}
+
+	/**
+	 * Format a memory delta (can be negative for freed memory).
+	 */
+	function formatMemoryDelta( delta ) {
+		if ( 0 === delta ) {
+			return '0 B';
+		}
+		var sign  = delta < 0 ? '−' : '+';
+		var abs   = Math.abs( delta );
+		var units = [ 'B', 'KB', 'MB', 'GB' ];
+		var i     = Math.floor( Math.log( abs ) / Math.log( 1024 ) );
+		return sign + ( abs / Math.pow( 1024, i ) ).toFixed( 1 ) + ' ' + units[ i ];
 	}
 
 	// Initialize on DOM ready.
