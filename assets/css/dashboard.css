@@ -1046,3 +1046,16 @@
 .scrutinizer-mem-freed {
 	color: #00a32a !important;
 }
+
+.scrutinizer-referer {
+	margin: 4px 0 8px;
+	font-size: 12px;
+	color: #787c82;
+}
+
+.scrutinizer-referer code {
+	font-size: 11px;
+	background: rgba(0, 0, 0, 0.05);
+	padding: 1px 5px;
+	border-radius: 3px;
+}
