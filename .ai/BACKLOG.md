@@ -39,8 +39,8 @@
 - [x] Cache-busting version via filemtime()
 - [x] Memory observations — `memory_get_usage()` deltas per callback, peak + allocated in summary, dashboard cards + per-source columns
 - [x] Enqueued assets inventory — script/style handles, sizes, dependencies, inline detection, handle-based attribution
-- [ ] Cron inventory — scheduled events, overdue/duplicate indicators
-- [ ] Hook Execution Trace — nested callback visualization (trace data exists, UI needed)
+- [x] Cron inventory — scheduled events, overdue/duplicate indicators
+- [x] Hook Execution Trace — nested callback visualization with collapsible tree, filter, timing bars
 
 ## M2.5 — AI Agent API & Secure Sharing (NEW — designed June 23, 2026)
 
