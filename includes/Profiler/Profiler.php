@@ -349,6 +349,10 @@ class Profiler {
 			'queries'            => self::get_query_log(),
 			'http_calls'         => $this->build_http_calls(),
 			'autoloaded_options' => self::get_autoloaded_options(),
+			'referer'            => isset( $_SERVER['HTTP_REFERER'] ) ? sanitize_url( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '',
+			'ajax_action'        => ( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_REQUEST['action'] ) )
+				? sanitize_text_field( wp_unslash( $_REQUEST['action'] ) )
+				: '',
 		);
 
 		try {

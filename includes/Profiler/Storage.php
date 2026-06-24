@@ -82,14 +82,16 @@ class Storage {
 	public static function save_profile( $session_id, $profile_data, $profile_type = 'session' ) {
 		global $wpdb;
 
-		$url    = isset( $profile_data['request']['url'] ) ? $profile_data['request']['url'] : '';
-		$method = isset( $profile_data['request']['method'] ) ? $profile_data['request']['method'] : 'GET';
-		$route  = isset( $profile_data['request']['route_class'] ) ? $profile_data['request']['route_class'] : '';
-		$dur_ns = isset( $profile_data['summary']['duration_ns'] ) ? $profile_data['summary']['duration_ns'] : 0;
-		$role   = isset( $profile_data['request']['user_role'] ) ? $profile_data['request']['user_role'] : 'anonymous';
+		$url          = isset( $profile_data['request']['url'] ) ? $profile_data['request']['url'] : '';
+		$method       = isset( $profile_data['request']['method'] ) ? $profile_data['request']['method'] : 'GET';
+		$route        = isset( $profile_data['request']['route_class'] ) ? $profile_data['request']['route_class'] : '';
+		$dur_ns       = isset( $profile_data['summary']['duration_ns'] ) ? $profile_data['summary']['duration_ns'] : 0;
+		$role         = isset( $profile_data['request']['user_role'] ) ? $profile_data['request']['user_role'] : 'anonymous';
+		$ajax_action  = isset( $profile_data['request']['ajax_action'] ) ? $profile_data['request']['ajax_action'] : '';
 
 		// Normalize URL to a grouping key: method + path (no query string, no host).
-		$route_key = self::normalize_route_key( $method, $url );
+		// AJAX requests get action-specific keys: POST:ajax:heartbeat.
+		$route_key = self::normalize_route_key( $method, $url, $ajax_action );
 
 		$result = $wpdb->insert(
 			self::table_name(),
@@ -130,7 +132,18 @@ class Storage {
 	 * @param string $url     Full request URL.
 	 * @return string  Normalized key like "GET:/wp-admin/edit.php".
 	 */
-	private static function normalize_route_key( $method, $url ) {
+	/**
+	 * Normalize a URL into a route grouping key.
+	 *
+	 * For admin-ajax.php requests, the AJAX action is appended so profiles
+	 * group by action: POST:ajax:heartbeat instead of one blob.
+	 *
+	 * @param string $method       HTTP method.
+	 * @param string $url          Full request URL.
+	 * @param string $ajax_action  AJAX action name (empty for non-AJAX).
+	 * @return string
+	 */
+	private static function normalize_route_key( $method, $url, $ajax_action = '' ) {
 		$path = wp_parse_url( $url, PHP_URL_PATH );
 		if ( empty( $path ) ) {
 			$path = '/';
@@ -140,6 +153,12 @@ class Storage {
 		if ( '' === $path ) {
 			$path = '/';
 		}
+
+		// Group AJAX calls by action instead of the generic admin-ajax.php path.
+		if ( ! empty( $ajax_action ) && false !== strpos( $path, 'admin-ajax.php' ) ) {
+			return strtoupper( $method ) . ':ajax:' . $ajax_action;
+		}
+
 		return strtoupper( $method ) . ':' . $path;
 	}
 

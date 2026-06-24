@@ -622,8 +622,17 @@
 		html += '</div>';
 
 		// Header with role pill.
+		var headerLabel = esc( request.method ) + ' ' + esc( request.url );
+		if ( request.ajax_action ) {
+			headerLabel = esc( request.method ) + ' ajax:' + esc( request.ajax_action ) + ' ' + rolePill( request.user_role );
+		} else {
+			headerLabel += ' ' + rolePill( request.user_role );
+		}
 		html += '<div class="scrutinizer-detail-header">';
-		html += '<h3>' + esc( request.method ) + ' ' + esc( request.url ) + ' ' + rolePill( request.user_role ) + '</h3>';
+		html += '<h3>' + headerLabel + '</h3>';
+		if ( request.referer ) {
+			html += '<div class="scrutinizer-referer">↩ triggered from <code>' + esc( request.referer ) + '</code></div>';
+		}
 		html += '</div>';
 
 		// Metric cards row.
@@ -1194,6 +1203,12 @@
 		var html = '<table class="scrutinizer-source-table widefat">';
 		html += '<tbody>';
 		html += '<tr><td>Route</td><td>' + esc( request.route_class || '—' ) + '</td></tr>';
+		if ( request.ajax_action ) {
+			html += '<tr><td>AJAX Action</td><td><code>' + esc( request.ajax_action ) + '</code></td></tr>';
+		}
+		if ( request.referer ) {
+			html += '<tr><td>Referer</td><td><code>' + esc( request.referer ) + '</code></td></tr>';
+		}
 		html += '<tr><td>User Role</td><td>' + rolePill( request.user_role ) + '</td></tr>';
 		html += '<tr><td>PHP</td><td>' + esc( request.php_version || '—' ) + '</td></tr>';
 		html += '<tr><td>WordPress</td><td>' + esc( request.wp_version || '—' ) + '</td></tr>';
