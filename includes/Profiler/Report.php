@@ -24,8 +24,9 @@ class Report {
 		$duration_ns = isset( $request_metadata['duration_ns'] ) ? $request_metadata['duration_ns'] : 0;
 
 		// Group timings by attribution.
-		$by_source     = array();
-		$total_excl_ns = 0;
+		$by_source           = array();
+		$total_excl_ns       = 0;
+		$total_mem_allocated  = 0;
 
 		foreach ( $raw_timings as $timing ) {
 			$attr = $timing['attribution'];
@@ -44,9 +45,11 @@ class Report {
 				);
 			}
 
+			$mem_delta = $timing['memory_after'] - $timing['memory_before'];
+
 			$by_source[ $key ]['exclusive_ns'] += $timing['exclusive_ns'];
 			$by_source[ $key ]['inclusive_ns'] += $timing['inclusive_ns'];
-			$by_source[ $key ]['memory_delta'] += ( $timing['memory_after'] - $timing['memory_before'] );
+			$by_source[ $key ]['memory_delta'] += $mem_delta;
 			++$by_source[ $key ]['call_count'];
 
 			// Per-callback detail.
@@ -59,12 +62,19 @@ class Report {
 					'exclusive_ns' => 0,
 					'inclusive_ns' => 0,
 					'call_count'   => 0,
+					'memory_delta' => 0,
 				);
 			}
 
 			$by_source[ $key ]['callbacks'][ $cb_key ]['exclusive_ns'] += $timing['exclusive_ns'];
 			$by_source[ $key ]['callbacks'][ $cb_key ]['inclusive_ns'] += $timing['inclusive_ns'];
+			$by_source[ $key ]['callbacks'][ $cb_key ]['memory_delta'] += $mem_delta;
 			++$by_source[ $key ]['callbacks'][ $cb_key ]['call_count'];
+
+			// Track total allocated memory (only positive deltas = actual allocations).
+			if ( $mem_delta > 0 ) {
+				$total_mem_allocated += $mem_delta;
+			}
 
 			$total_excl_ns += $timing['exclusive_ns'];
 		}
@@ -109,16 +119,18 @@ class Report {
 
 		return array(
 			'summary'       => array(
-				'duration_ns'        => $duration_ns,
-				'duration_ms'        => round( $duration_ns / 1e6, 2 ),
-				'total_exclusive_ns' => $total_excl_ns,
-				'unattributed_ns'    => $unattributed_ns,
-				'breakdown'          => $breakdown,
-				'callback_count'     => count( $raw_timings ),
-				'source_count'       => count( $by_source ),
-				'query_count'        => isset( $request_metadata['query_count'] ) ? (int) $request_metadata['query_count'] : 0,
-				'http_call_count'    => count( $http_calls ),
-				'http_total_ms'      => round( $http_total_ms, 2 ),
+				'duration_ns'          => $duration_ns,
+				'duration_ms'          => round( $duration_ns / 1e6, 2 ),
+				'total_exclusive_ns'   => $total_excl_ns,
+				'unattributed_ns'      => $unattributed_ns,
+				'breakdown'            => $breakdown,
+				'callback_count'       => count( $raw_timings ),
+				'source_count'         => count( $by_source ),
+				'query_count'          => isset( $request_metadata['query_count'] ) ? (int) $request_metadata['query_count'] : 0,
+				'http_call_count'      => count( $http_calls ),
+				'http_total_ms'        => round( $http_total_ms, 2 ),
+				'memory_peak'          => memory_get_peak_usage(),
+				'memory_allocated'     => $total_mem_allocated,
 			),
 			'sources'       => array_values( $by_source ),
 			'trace'         => $call_stack_trace,
