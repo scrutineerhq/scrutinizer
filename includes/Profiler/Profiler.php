@@ -405,7 +405,7 @@ class Profiler {
 		$log = array();
 		foreach ( $wpdb->queries as $q ) {
 			$log[] = array(
-				'sql'     => isset( $q[0] ) ? $q[0] : '',
+				'sql'     => isset( $q[0] ) ? self::sanitize_query( $q[0] ) : '',
 				'time_ms' => isset( $q[1] ) ? round( (float) $q[1] * 1000, 2 ) : 0,
 				'caller'  => isset( $q[2] ) ? $q[2] : '',
 			);
@@ -420,5 +420,76 @@ class Profiler {
 		);
 
 		return $log;
+	}
+
+	/**
+	 * Sanitize a SQL query to show only operation and table name.
+	 *
+	 * Strips all values, columns, conditions, and clauses — returns only
+	 * the operation type (SELECT, INSERT, UPDATE, DELETE, etc.) and the
+	 * primary table name. Examples:
+	 *   "SELECT option_value FROM wp_options WHERE ..." → "SELECT wp_options"
+	 *   "INSERT INTO wp_postmeta ..."                  → "INSERT wp_postmeta"
+	 *   "UPDATE wp_posts SET ..."                      → "UPDATE wp_posts"
+	 *
+	 * @param string $sql  Raw SQL query.
+	 * @return string  Sanitized "OPERATION table" string.
+	 */
+	private static function sanitize_query( $sql ) {
+		$sql = trim( $sql );
+
+		// Extract the operation (first keyword).
+		if ( preg_match( '/^(SELECT|INSERT|UPDATE|DELETE|REPLACE|ALTER|CREATE|DROP|TRUNCATE|SHOW|DESCRIBE|SET|START|COMMIT|ROLLBACK|SAVEPOINT)\b/i', $sql, $op_match ) ) {
+			$operation = strtoupper( $op_match[1] );
+		} else {
+			return 'UNKNOWN';
+		}
+
+		$table = '';
+
+		switch ( $operation ) {
+			case 'SELECT':
+			case 'DELETE':
+				// Match FROM <table>.
+				if ( preg_match( '/\bFROM\s+`?(\w+)`?/i', $sql, $m ) ) {
+					$table = $m[1];
+				}
+				break;
+
+			case 'INSERT':
+			case 'REPLACE':
+				// Match INTO <table> or INSERT <table>.
+				if ( preg_match( '/\bINTO\s+`?(\w+)`?/i', $sql, $m ) ) {
+					$table = $m[1];
+				}
+				break;
+
+			case 'UPDATE':
+				// Match UPDATE <table>.
+				if ( preg_match( '/^UPDATE\s+`?(\w+)`?/i', $sql, $m ) ) {
+					$table = $m[1];
+				}
+				break;
+
+			case 'ALTER':
+			case 'CREATE':
+			case 'DROP':
+			case 'TRUNCATE':
+				// Match TABLE <table>.
+				if ( preg_match( '/\bTABLE\s+(?:IF\s+(?:NOT\s+)?EXISTS\s+)?`?(\w+)`?/i', $sql, $m ) ) {
+					$table = $m[1];
+				}
+				break;
+
+			case 'SHOW':
+			case 'DESCRIBE':
+				// Match SHOW <something> or DESCRIBE <table>.
+				if ( preg_match( '/^(?:SHOW|DESCRIBE)\s+(?:\w+\s+)?`?(\w+)`?/i', $sql, $m ) ) {
+					$table = $m[1];
+				}
+				break;
+		}
+
+		return $table ? $operation . ' ' . $table : $operation;
 	}
 }
