@@ -101,7 +101,7 @@ class Report {
 			: self::classify_route( $request_metadata );
 
 		return array(
-			'summary' => array(
+			'summary'       => array(
 				'duration_ns'        => $duration_ns,
 				'duration_ms'        => round( $duration_ns / 1e6, 2 ),
 				'total_exclusive_ns' => $total_excl_ns,
@@ -111,9 +111,9 @@ class Report {
 				'source_count'       => count( $by_source ),
 				'query_count'        => isset( $request_metadata['query_count'] ) ? (int) $request_metadata['query_count'] : 0,
 			),
-			'sources' => array_values( $by_source ),
-			'trace'   => $call_stack_trace,
-			'request' => array(
+			'sources'       => array_values( $by_source ),
+			'trace'         => $call_stack_trace,
+			'request'       => array(
 				'url'         => isset( $request_metadata['url'] ) ? $request_metadata['url'] : '',
 				'method'      => isset( $request_metadata['method'] ) ? $request_metadata['method'] : 'GET',
 				'route_class' => $route_class,
@@ -310,15 +310,15 @@ class Report {
 			$pct_width = ( $duration_ns > 0 ) ? round( ( $wall_ns / $duration_ns ) * 100, 3 ) : 0;
 
 			$timeline[] = array(
-				'callback'   => $t['callback'] ?? '',
-				'tag'        => $t['tag'] ?? '',
-				'source'     => ( $t['attribution']['slug'] ?? '' ),
-				'type'       => ( $t['attribution']['type'] ?? '' ),
-				'offset_ns'  => $offset_ns,
-				'wall_ns'    => $wall_ns,
-				'excl_ns'    => $t['exclusive_ns'] ?? 0,
-				'pct_start'  => $pct_start,
-				'pct_width'  => $pct_width,
+				'callback'  => $t['callback'] ?? '',
+				'tag'       => $t['tag'] ?? '',
+				'source'    => ( $t['attribution']['slug'] ?? '' ),
+				'type'      => ( $t['attribution']['type'] ?? '' ),
+				'offset_ns' => $offset_ns,
+				'wall_ns'   => $wall_ns,
+				'excl_ns'   => $t['exclusive_ns'] ?? 0,
+				'pct_start' => $pct_start,
+				'pct_width' => $pct_width,
 			);
 		}
 
