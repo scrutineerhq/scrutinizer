@@ -3032,6 +3032,49 @@
 	}
 
 	/* ================================================================== */
+	/*  Export JSON — Download raw profile data                           */
+	/* ================================================================== */
+
+	/**
+	 * Export a profile as a downloadable JSON file.
+	 */
+	function exportProfileJSON( profile ) {
+		var data = profile.profile_data || {};
+		var id   = profile.id || 'unknown';
+
+		// Build a clean export object with metadata.
+		var exportObj = {
+			_export: {
+				plugin: 'scrutinizer',
+				version: scrutinizerAdmin.version || '1.0.0',
+				exported_at: new Date().toISOString()
+			},
+			id:          parseInt( id, 10 ),
+			route_key:   profile.route_key || '',
+			captured_at: profile.captured_at || '',
+			duration_ns: parseInt( profile.duration_ns, 10 ) || 0,
+			user_role:   profile.user_role || '',
+			is_pinned:   parseInt( profile.is_pinned, 10 ) === 1,
+			note:        profile.note || '',
+			tags:        profile.tags || '',
+			profile_data: data
+		};
+
+		var json     = JSON.stringify( exportObj, null, 2 );
+		var blob     = new Blob( [ json ], { type: 'application/json' } );
+		var filename = 'scrutinizer-profile-' + id + '.json';
+
+		// Trigger download.
+		var a   = document.createElement( 'a' );
+		a.href  = URL.createObjectURL( blob );
+		a.download = filename;
+		document.body.appendChild( a );
+		a.click();
+		document.body.removeChild( a );
+		URL.revokeObjectURL( a.href );
+	}
+
+	/* ================================================================== */
 	/*  Share Report — Zero-Knowledge Encrypted Sharing via Relay         */
 	/* ================================================================== */
 
