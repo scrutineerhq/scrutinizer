@@ -2030,7 +2030,7 @@
 		}
 		var priority = node._priority ? ':' + esc( node._priority ) : '';
 
-		var html = '<div class="scrutinizer-trace-leaf">';
+		var html = '<div class="scrutinizer-trace-leaf-item">';
 		html += '<code>' + esc( node._callback ) + '</code>';
 		html += ' <span class="scrutinizer-trace-hook-tag">@' + esc( node._hook ) + priority + '</span>';
 		html += ' <span class="scrutinizer-trace-timing">' + timing + '</span>';

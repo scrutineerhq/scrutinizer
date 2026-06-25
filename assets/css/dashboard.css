@@ -1882,6 +1882,19 @@
 	font-size: 9px;
 }
 
+.scrutinizer-trace-leaf-item {
+	padding: 3px 4px 3px 18px;
+	font-size: 12px;
+	line-height: 1.4;
+	overflow: hidden;
+}
+
+.scrutinizer-trace-leaf-item code {
+	font-family: Menlo, Consolas, 'Courier New', monospace;
+	font-size: 12px;
+	word-break: break-all;
+}
+
 .scrutinizer-trace-callback {
 	font-family: Menlo, Consolas, 'Courier New', monospace;
 	font-size: 12px;
