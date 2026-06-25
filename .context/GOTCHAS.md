@@ -139,3 +139,12 @@ The warnings were the visible symptom, but the real problem is deeper: even with
 
 **Don't:** Sanitize SQL by substituting values while keeping structure. Regex-based literal replacement is fragile and always misses edge cases. Even "structure-preserving sanitization" leaks information — column names reveal schema, WHERE clauses reveal business logic, JOINs reveal relationships.
 **Do:** Reduce queries to verb + table name(s) only. `SELECT option_value FROM wp_options WHERE option_name = 'foo' LIMIT 1` becomes `SELECT wp_options`. Period. The reduction is applied at write time (Profiler::sanitize_query) and again at read time (Sanitizer::sanitize_sql) as defense-in-depth. Both implementations must stay in sync. If a stored query contains any SQL keyword beyond the verb, it's a regression.
+
+---
+
+### Duplicate delegated click handlers fire on same CSS class
+
+**What happened:** Two separate `$( document ).on( 'click', '.scrutinizer-sortable', ... )` handlers were registered at lines 183 and 289. One handled detail-view table sorts (queries, http calls, assets via `data-sort-table`), the other handled list-view sorts (grouped, route, history, cron via `data-sort`). Every sort click fired both handlers — one did useful work, the other did a wasted no-op lookup.
+
+**Don't:** Bind multiple delegated handlers to the same CSS class selector when they handle different concerns.
+**Do:** Use attribute selectors to namespace: `[data-sort-table]` for detail-view tables, `[data-sort]` for list-view tables. The CSS class stays shared for styling, but event delegation targets only the relevant elements.
