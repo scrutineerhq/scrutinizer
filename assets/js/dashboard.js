@@ -3440,6 +3440,10 @@
 
 	function showHistoryView() {
 		currentView = 'history';
+		if ( ! sortField ) {
+			sortField = 'captured_at';
+			sortDir   = 'desc';
+		}
 		compareChecked = {};
 		$( '#scrutinizer-results' ).hide();
 		$( '#scrutinizer-route-detail' ).remove();
@@ -3622,6 +3626,10 @@
 
 	function showCronView() {
 		currentView = 'cron';
+		if ( ! sortField ) {
+			sortField = 'timestamp';
+			sortDir   = 'asc';
+		}
 		$( '#scrutinizer-results' ).hide();
 		$( '#scrutinizer-detail' ).hide();
 		$( '#scrutinizer-compare-view' ).remove();
