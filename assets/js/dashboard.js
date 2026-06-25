@@ -4198,82 +4198,88 @@
 		var $btn = $( '#scrutinizer-share-go' );
 		var $result = $( '#scrutinizer-share-result' );
 
-		$btn.html( '<span class="dashicons dashicons-update spin"></span> Uploading…' );
+		$btn.html( '<span class="dashicons dashicons-update spin"></span> Compressing…' );
 
-		// Use Web Crypto API
-		var plaintext = new TextEncoder().encode( JSON.stringify( data ) );
+		// Gzip the JSON before encryption for smaller payloads
+		var jsonBytes = new TextEncoder().encode( JSON.stringify( data ) );
 
-		// Generate random AES-256 key and IV
-		var keyBytes = crypto.getRandomValues( new Uint8Array( 32 ) );
-		var iv = crypto.getRandomValues( new Uint8Array( 12 ) );
+		compressGzip( jsonBytes ).then( function( compressed ) {
+			$btn.html( '<span class="dashicons dashicons-update spin"></span> Encrypting…' );
 
-		// The key fragment for the share URL. For plain shares this is the raw key;
-		// for passphrase shares it becomes the wrapped key material.
-		var urlFragment = base64urlEncode( keyBytes );
+			var plaintext = compressed;
 
-		crypto.subtle.importKey( 'raw', keyBytes, { name: 'AES-GCM' }, true, [ 'encrypt' ] )
-			.then( function( key ) {
-				return crypto.subtle.encrypt( { name: 'AES-GCM', iv: iv }, key, plaintext );
-			} )
-			.then( function( ciphertext ) {
-				var ciphertextB64 = base64urlEncode( new Uint8Array( ciphertext ) );
-				var ivB64 = base64urlEncode( iv );
-				var keyB64 = base64urlEncode( keyBytes );
-				var hasPassphrase = false;
+			// Generate random AES-256 key and IV
+			var keyBytes = crypto.getRandomValues( new Uint8Array( 32 ) );
+			var iv = crypto.getRandomValues( new Uint8Array( 12 ) );
 
-				// If passphrase, wrap the key and use wrapped material in URL fragment
-				if ( passphrase ) {
-					hasPassphrase = true;
-					return wrapKeyWithPassphrase( keyBytes, iv, passphrase ).then( function( wrapped ) {
-						keyB64 = base64urlEncode( new Uint8Array( wrapped ) );
-						urlFragment = keyB64;
-						return uploadToRelay( ciphertextB64, ivB64, keyB64, ttlDays, burnAfterReading, hasPassphrase );
+			// The key fragment for the share URL. For plain shares this is the raw key;
+			// for passphrase shares it becomes the wrapped key material.
+			var urlFragment = base64urlEncode( keyBytes );
+
+			return crypto.subtle.importKey( 'raw', keyBytes, { name: 'AES-GCM' }, true, [ 'encrypt' ] )
+				.then( function( key ) {
+					return crypto.subtle.encrypt( { name: 'AES-GCM', iv: iv }, key, plaintext );
+				} )
+				.then( function( ciphertext ) {
+					var ciphertextB64 = base64urlEncode( new Uint8Array( ciphertext ) );
+					var ivB64 = base64urlEncode( iv );
+					var keyB64 = base64urlEncode( keyBytes );
+					var hasPassphrase = false;
+
+					// If passphrase, wrap the key and use wrapped material in URL fragment
+					if ( passphrase ) {
+						hasPassphrase = true;
+						return wrapKeyWithPassphrase( keyBytes, iv, passphrase ).then( function( wrapped ) {
+							keyB64 = base64urlEncode( new Uint8Array( wrapped ) );
+							urlFragment = keyB64;
+							return uploadToRelay( ciphertextB64, ivB64, keyB64, ttlDays, burnAfterReading, hasPassphrase );
+						} );
+					}
+
+					return uploadToRelay( ciphertextB64, ivB64, keyB64, ttlDays, burnAfterReading, hasPassphrase );
+				} )
+				.then( function( resp ) {
+					$btn.hide();
+					$( '.scrutinizer-share-options, .scrutinizer-share-sections, #scrutinizer-share-cancel' ).hide();
+
+					var shareUrl = resp.url + '#' + urlFragment;
+
+					var html = '<div class="scrutinizer-share-success">';
+					html += '<p><span class="dashicons dashicons-yes-alt" style="color:#4ab866;"></span> Report encrypted and shared.</p>';
+					html += '<div class="scrutinizer-share-url-row">';
+					html += '<input type="text" readonly value="' + esc( shareUrl ) + '" id="scrutinizer-share-url" />';
+					html += '<button type="button" class="button" id="scrutinizer-share-copy">Copy</button>';
+					html += '</div>';
+					html += '<p class="description">Expires: ' + esc( resp.expires_at ) + '</p>';
+					html += '<button type="button" class="button button-link scrutinizer-revoke-link" id="scrutinizer-share-revoke" data-id="' + esc( resp.id ) + '" data-token="' + esc( resp.revoke_token ) + '">';
+					html += '<span class="dashicons dashicons-dismiss"></span> Revoke</button>';
+					html += '</div>';
+
+					$result.html( html ).show();
+
+					// Copy handler
+					$( '#scrutinizer-share-copy' ).on( 'click', function() {
+						$( '#scrutinizer-share-url' ).select();
+						copyToClipboard( shareUrl );
+						$( this ).html( '✓ Copied' );
+						setTimeout( function() {
+							$( '#scrutinizer-share-copy' ).html( 'Copy' );
+						}, 2000 );
 					} );
-				}
 
-				return uploadToRelay( ciphertextB64, ivB64, keyB64, ttlDays, burnAfterReading, hasPassphrase );
-			} )
-			.then( function( resp ) {
-				$btn.hide();
-				$( '.scrutinizer-share-options, .scrutinizer-share-sections, #scrutinizer-share-cancel' ).hide();
-
-				var shareUrl = resp.url + '#' + urlFragment;
-
-				var html = '<div class="scrutinizer-share-success">';
-				html += '<p><span class="dashicons dashicons-yes-alt" style="color:#4ab866;"></span> Report encrypted and shared.</p>';
-				html += '<div class="scrutinizer-share-url-row">';
-				html += '<input type="text" readonly value="' + esc( shareUrl ) + '" id="scrutinizer-share-url" />';
-				html += '<button type="button" class="button" id="scrutinizer-share-copy">Copy</button>';
-				html += '</div>';
-				html += '<p class="description">Expires: ' + esc( resp.expires_at ) + '</p>';
-				html += '<button type="button" class="button button-link scrutinizer-revoke-link" id="scrutinizer-share-revoke" data-id="' + esc( resp.id ) + '" data-token="' + esc( resp.revoke_token ) + '">';
-				html += '<span class="dashicons dashicons-dismiss"></span> Revoke</button>';
-				html += '</div>';
-
-				$result.html( html ).show();
-
-				// Copy handler
-				$( '#scrutinizer-share-copy' ).on( 'click', function() {
-					$( '#scrutinizer-share-url' ).select();
-					copyToClipboard( shareUrl );
-					$( this ).html( '✓ Copied' );
-					setTimeout( function() {
-						$( '#scrutinizer-share-copy' ).html( 'Copy' );
-					}, 2000 );
+					// Revoke handler
+					$( '#scrutinizer-share-revoke' ).on( 'click', function() {
+						var id = $( this ).data( 'id' );
+						var token = $( this ).data( 'token' );
+						revokeSharedReport( id, token );
+					} );
 				} );
-
-				// Revoke handler
-				$( '#scrutinizer-share-revoke' ).on( 'click', function() {
-					var id = $( this ).data( 'id' );
-					var token = $( this ).data( 'token' );
-					revokeSharedReport( id, token );
-				} );
-			} )
-			.catch( function( err ) {
-				console.error( 'Share error:', err );
-				$btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-lock"></span> Encrypt &amp; Share' );
-				$result.html( '<p class="scrutinizer-share-error">Encryption failed: ' + esc( err.message || 'Unknown error' ) + '</p>' ).show();
-			} );
+		} )
+		.catch( function( err ) {
+			console.error( 'Share error:', err );
+			$btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-lock"></span> Encrypt &amp; Share' );
+			$result.html( '<p class="scrutinizer-share-error">Encryption failed: ' + esc( err.message || 'Unknown error' ) + '</p>' ).show();
+		} );
 	}
 
 	/**
@@ -4286,14 +4292,15 @@
 				iv: iv,
 				ttl_days: ttlDays,
 				expire_after_reading: burnAfterReading,
-				has_passphrase: hasPassphrase
+				has_passphrase: hasPassphrase,
+				compressed: true
 			};
 
 			// Use fetch to avoid jQuery AJAX CORS defaults
 			var bodyStr = JSON.stringify( payload );
 
-			// Guard against relay's 2 MB limit.
-			if ( bodyStr.length > 2000000 ) {
+			// Guard against relay's 10 MB limit.
+			if ( bodyStr.length > 10000000 ) {
 				reject( new Error( 'Report too large (' + ( bodyStr.length / 1048576 ).toFixed( 1 ) + ' MB). Try unchecking Trace and Timeline.' ) );
 				return;
 			}
@@ -4389,6 +4396,41 @@
 			parts.push( String.fromCharCode.apply( null, bytes.subarray( i, Math.min( i + CHUNK, bytes.length ) ) ) );
 		}
 		return btoa( parts.join( '' ) ).replace( /\+/g, '-' ).replace( /\//g, '_' ).replace( /=+$/, '' );
+	}
+
+	/**
+	 * Gzip compress a Uint8Array using the CompressionStream API.
+	 */
+	function compressGzip( data ) {
+		var cs = new CompressionStream( 'gzip' );
+		var writer = cs.writable.getWriter();
+		writer.write( data );
+		writer.close();
+
+		var reader = cs.readable.getReader();
+		var chunks = [];
+
+		function pump() {
+			return reader.read().then( function( result ) {
+				if ( result.done ) {
+					var totalLen = 0;
+					var i;
+					for ( i = 0; i < chunks.length; i++ ) {
+						totalLen += chunks[ i ].length;
+					}
+					var out = new Uint8Array( totalLen );
+					var offset = 0;
+					for ( i = 0; i < chunks.length; i++ ) {
+						out.set( chunks[ i ], offset );
+						offset += chunks[ i ].length;
+					}
+					return out;
+				}
+				chunks.push( result.value );
+				return pump();
+			} );
+		}
+		return pump();
 	}
 
 	/**
