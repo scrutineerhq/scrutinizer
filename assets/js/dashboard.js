@@ -268,6 +268,13 @@
 			}
 		} );
 
+		// Share button on detail view.
+		$( document ).on( 'click', '#scrutinizer-share-btn', function() {
+			if ( currentProfileId ) {
+				showSharePanel( currentProfileId );
+			}
+		} );
+
 		// Save annotation on blur.
 		$( document ).on( 'blur', '#scrutinizer-note-input', saveAnnotation );
 		$( document ).on( 'blur', '#scrutinizer-tags-input', saveAnnotation );
@@ -914,6 +921,7 @@
 		html += '<input type="text" id="scrutinizer-note-input" value="' + esc( profileNote ) + '" placeholder="Why did you take this measurement?" /></label>';
 		html += '<label class="scrutinizer-pin-field"><span>' + esc( scrutinizerAdmin.i18n.tags || 'Tags' ) + ':</span>';
 		html += '<input type="text" id="scrutinizer-tags-input" value="' + esc( profileTags ) + '" placeholder="before-update, opcache, v2.1" /></label>';
+		html += '<button type="button" class="button" id="scrutinizer-share-btn" title="Share this report"><span class="dashicons dashicons-share-alt2"></span> Share</button>';
 		html += '</div>';
 
 		// Header with role pill.
@@ -2893,6 +2901,15 @@
 		}
 		html += '</div>';
 
+		// --- Send to Support section ---
+		html += '<div class="scrutinizer-api-section">';
+		html += '<h3 class="scrutinizer-api-heading"><span class="dashicons dashicons-lock"></span> Send to Support</h3>';
+		html += '<p class="scrutinizer-api-desc">Share a performance report with your support team or plugin developer via an encrypted, self-destructing link. '
+		html += 'Data is encrypted in your browser before upload &mdash; the relay server never sees your report contents.</p>';
+		html += '<p class="scrutinizer-api-desc">To share: open a profile from the <strong>History</strong> tab, then click <strong>Share</strong> in the toolbar.</p>';
+		html += '<p class="scrutinizer-api-desc" style="color:#50575e;font-size:12px;">Powered by <code>scrutinizer.dev</code> &mdash; zero-knowledge encrypted relay.</p>';
+		html += '</div>';
+
 		$container.html( html );
 
 		bindApiEvents( $container );
@@ -3002,6 +3019,395 @@
 				$btn.prop( 'disabled', false );
 			} );
 		} );
+	}
+
+	/* ================================================================== */
+	/*  Share Report — Zero-Knowledge Encrypted Sharing via Relay         */
+	/* ================================================================== */
+
+	var RELAY_URL = 'https://scrutinizer.dev';
+
+	/**
+	 * Show the share panel for a given profile.
+	 */
+	function showSharePanel( profileId ) {
+		// Check if panel already open
+		if ( $( '#scrutinizer-share-panel' ).length ) {
+			$( '#scrutinizer-share-panel' ).remove();
+			return;
+		}
+
+		var html = '<div id="scrutinizer-share-panel" class="scrutinizer-share-panel">';
+		html += '<h4><span class="dashicons dashicons-share-alt2"></span> Share Report</h4>';
+		html += '<p class="description">Create an encrypted, self-destructing link. The relay server never sees your data.</p>';
+
+		// Options
+		html += '<div class="scrutinizer-share-options">';
+		html += '<label class="scrutinizer-share-option">';
+		html += '<span>Expires after</span>';
+		html += '<select id="scrutinizer-share-ttl">';
+		html += '<option value="1">1 day</option>';
+		html += '<option value="7" selected>7 days</option>';
+		html += '<option value="14">14 days</option>';
+		html += '<option value="30">30 days</option>';
+		html += '</select></label>';
+
+		html += '<label class="scrutinizer-share-option">';
+		html += '<input type="checkbox" id="scrutinizer-share-burn">';
+		html += ' <span>Expire after first view</span></label>';
+
+		html += '<label class="scrutinizer-share-option">';
+		html += '<input type="checkbox" id="scrutinizer-share-passphrase-toggle">';
+		html += ' <span>Add passphrase</span></label>';
+
+		html += '<div id="scrutinizer-share-passphrase-field" style="display:none;">';
+		html += '<input type="text" id="scrutinizer-share-passphrase" placeholder="Passphrase (share separately)" />';
+		html += '</div>';
+
+		html += '</div>';
+
+		// Include sections
+		html += '<details class="scrutinizer-share-sections">';
+		html += '<summary>Sections to include</summary>';
+		html += '<div class="scrutinizer-share-section-list">';
+		html += '<label><input type="checkbox" name="share_section" value="summary" checked disabled> Summary</label>';
+		html += '<label><input type="checkbox" name="share_section" value="sources" checked> Sources</label>';
+		html += '<label><input type="checkbox" name="share_section" value="queries" checked> Queries</label>';
+		html += '<label><input type="checkbox" name="share_section" value="timeline" checked> Timeline</label>';
+		html += '<label><input type="checkbox" name="share_section" value="trace" checked> Trace</label>';
+		html += '<label><input type="checkbox" name="share_section" value="http_calls" checked> HTTP Calls</label>';
+		html += '<label><input type="checkbox" name="share_section" value="autoloaded_options" checked> Options</label>';
+		html += '<label><input type="checkbox" name="share_section" value="enqueued_assets" checked> Assets</label>';
+		html += '<label><input type="checkbox" name="share_section" value="diagnostics"> Diagnostics</label>';
+		html += '</div></details>';
+
+		html += '<div class="scrutinizer-share-actions">';
+		html += '<button type="button" class="button button-primary" id="scrutinizer-share-go">';
+		html += '<span class="dashicons dashicons-lock"></span> Encrypt &amp; Share</button>';
+		html += '<button type="button" class="button button-link" id="scrutinizer-share-cancel">Cancel</button>';
+		html += '</div>';
+
+		html += '<div id="scrutinizer-share-result" style="display:none;"></div>';
+		html += '</div>';
+
+		// Insert after the pin toolbar
+		$( '.scrutinizer-pin-toolbar' ).after( html );
+
+		// Toggle passphrase field
+		$( '#scrutinizer-share-passphrase-toggle' ).on( 'change', function() {
+			$( '#scrutinizer-share-passphrase-field' ).toggle( this.checked );
+		} );
+
+		// Cancel
+		$( '#scrutinizer-share-cancel' ).on( 'click', function() {
+			$( '#scrutinizer-share-panel' ).remove();
+		} );
+
+		// Share
+		$( '#scrutinizer-share-go' ).on( 'click', function() {
+			executeShare( profileId );
+		} );
+	}
+
+	/**
+	 * Execute the share: compile, encrypt, upload.
+	 */
+	function executeShare( profileId ) {
+		var $btn = $( '#scrutinizer-share-go' );
+		var $result = $( '#scrutinizer-share-result' );
+		$btn.prop( 'disabled', true ).html( '<span class="dashicons dashicons-update spin"></span> Encrypting…' );
+
+		// Gather options
+		var ttlDays = parseInt( $( '#scrutinizer-share-ttl' ).val(), 10 );
+		var burnAfterReading = $( '#scrutinizer-share-burn' ).is( ':checked' );
+		var usePassphrase = $( '#scrutinizer-share-passphrase-toggle' ).is( ':checked' );
+		var passphrase = usePassphrase ? $( '#scrutinizer-share-passphrase' ).val() : null;
+
+		// Gather included sections
+		var sections = [];
+		$( 'input[name="share_section"]:checked' ).each( function() {
+			sections.push( $( this ).val() );
+		} );
+
+		// Fetch compiled profile via AJAX
+		$.post( scrutinizerAdmin.ajaxUrl, {
+			action: 'scrutinizer_get_profile',
+			nonce:  scrutinizerAdmin.nonce,
+			id:     profileId
+		}, function( response ) {
+			if ( ! response.success || ! response.data || ! response.data.profile ) {
+				$btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-lock"></span> Encrypt &amp; Share' );
+				$result.html( '<p class="scrutinizer-share-error">Failed to load profile data.</p>' ).show();
+				return;
+			}
+
+			var profile = response.data.profile;
+			var profileData = profile.profile_data || {};
+
+			// Build share payload — only included sections
+			var shareData = {
+				summary: profileData.summary || {},
+				request: {
+					method: ( profileData.request || {} ).method || 'GET',
+					url: ( profileData.request || {} ).url || '',
+					route_key: profile.route_key || '',
+					label: ( profileData.request || {} ).label || '',
+					role: ( profileData.request || {} ).user_role || '',
+					status: profile.response_status || null
+				},
+				captured_at: profile.captured_at
+			};
+
+			// Add selected sections
+			if ( sections.indexOf( 'sources' ) !== -1 && profileData.sources ) {
+				shareData.sources = profileData.sources.map( function( src ) {
+					return {
+						source: src.slug || 'unknown',
+						name: src.slug || 'unknown',
+						type: src.type || 'unknown',
+						exclusive_ms: ( src.exclusive_ns || 0 ) / 1e6,
+						inclusive_ms: ( src.inclusive_ns || 0 ) / 1e6,
+						callback_count: src.callback_count || 0
+					};
+				} );
+			}
+			if ( sections.indexOf( 'queries' ) !== -1 && profileData.queries ) {
+				shareData.queries = profileData.queries.map( function( q ) {
+					return {
+						sql: q.sql || '',
+						time_ms: q.time_ms || 0,
+						source: q.source || '',
+						source_type: q.source_type || ''
+					};
+				} );
+			}
+			if ( sections.indexOf( 'timeline' ) !== -1 && profileData.timeline ) {
+				shareData.timeline = profileData.timeline;
+			}
+			if ( sections.indexOf( 'timeline' ) !== -1 && profileData.phase_markers ) {
+				shareData.phase_markers = profileData.phase_markers.map( function( m ) {
+					return {
+						hook: m.hook || '',
+						label: m.label || m.hook || '',
+						offset_ms: ( m.offset_ns || 0 ) / 1e6
+					};
+				} );
+			}
+			if ( sections.indexOf( 'trace' ) !== -1 && profileData.trace ) {
+				shareData.trace = profileData.trace;
+			}
+			if ( sections.indexOf( 'http_calls' ) !== -1 && profileData.http_calls ) {
+				shareData.http_calls = profileData.http_calls;
+			}
+			if ( sections.indexOf( 'autoloaded_options' ) !== -1 && profileData.autoloaded_options ) {
+				shareData.autoloaded_options = profileData.autoloaded_options;
+			}
+			if ( sections.indexOf( 'enqueued_assets' ) !== -1 && profileData.enqueued_assets ) {
+				shareData.enqueued_assets = profileData.enqueued_assets;
+			}
+
+			// Diagnostics: separate fetch if requested
+			if ( sections.indexOf( 'diagnostics' ) !== -1 ) {
+				$.get( scrutinizerAdmin.apiBase + '/v1/diagnostics', function( diag ) {
+					shareData.diagnostics = diag;
+					encryptAndUpload( shareData, ttlDays, burnAfterReading, passphrase );
+				} ).fail( function() {
+					// Continue without diagnostics
+					encryptAndUpload( shareData, ttlDays, burnAfterReading, passphrase );
+				} );
+			} else {
+				encryptAndUpload( shareData, ttlDays, burnAfterReading, passphrase );
+			}
+
+		} ).fail( function() {
+			$btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-lock"></span> Encrypt &amp; Share' );
+			$result.html( '<p class="scrutinizer-share-error">Request failed. Please try again.</p>' ).show();
+		} );
+	}
+
+	/**
+	 * Encrypt a report payload and upload to the relay.
+	 */
+	function encryptAndUpload( data, ttlDays, burnAfterReading, passphrase ) {
+		var $btn = $( '#scrutinizer-share-go' );
+		var $result = $( '#scrutinizer-share-result' );
+
+		$btn.html( '<span class="dashicons dashicons-update spin"></span> Uploading…' );
+
+		// Use Web Crypto API
+		var plaintext = new TextEncoder().encode( JSON.stringify( data ) );
+
+		// Generate random AES-256 key and IV
+		var keyBytes = crypto.getRandomValues( new Uint8Array( 32 ) );
+		var iv = crypto.getRandomValues( new Uint8Array( 12 ) );
+
+		crypto.subtle.importKey( 'raw', keyBytes, { name: 'AES-GCM' }, true, [ 'encrypt' ] )
+			.then( function( key ) {
+				return crypto.subtle.encrypt( { name: 'AES-GCM', iv: iv }, key, plaintext );
+			} )
+			.then( function( ciphertext ) {
+				var ciphertextB64 = base64urlEncode( new Uint8Array( ciphertext ) );
+				var ivB64 = base64urlEncode( iv );
+				var keyB64 = base64urlEncode( keyBytes );
+				var hasPassphrase = false;
+
+				// If passphrase, wrap the key
+				if ( passphrase ) {
+					hasPassphrase = true;
+					return wrapKeyWithPassphrase( keyBytes, iv, passphrase ).then( function( wrapped ) {
+						keyB64 = base64urlEncode( new Uint8Array( wrapped ) );
+						return uploadToRelay( ciphertextB64, ivB64, keyB64, ttlDays, burnAfterReading, hasPassphrase );
+					} );
+				}
+
+				return uploadToRelay( ciphertextB64, ivB64, keyB64, ttlDays, burnAfterReading, hasPassphrase );
+			} )
+			.then( function( resp ) {
+				$btn.hide();
+				$( '.scrutinizer-share-options, .scrutinizer-share-sections, #scrutinizer-share-cancel' ).hide();
+
+				var shareUrl = resp.url + '#' + base64urlEncode( keyBytes );
+
+				var html = '<div class="scrutinizer-share-success">';
+				html += '<p><span class="dashicons dashicons-yes-alt" style="color:#4ab866;"></span> Report encrypted and shared.</p>';
+				html += '<div class="scrutinizer-share-url-row">';
+				html += '<input type="text" readonly value="' + esc( shareUrl ) + '" id="scrutinizer-share-url" />';
+				html += '<button type="button" class="button" id="scrutinizer-share-copy">Copy</button>';
+				html += '</div>';
+				html += '<p class="description">Expires: ' + esc( resp.expires_at ) + '</p>';
+				html += '<button type="button" class="button button-link scrutinizer-revoke-link" id="scrutinizer-share-revoke" data-id="' + esc( resp.id ) + '" data-token="' + esc( resp.revoke_token ) + '">';
+				html += '<span class="dashicons dashicons-dismiss"></span> Revoke</button>';
+				html += '</div>';
+
+				$result.html( html ).show();
+
+				// Copy handler
+				$( '#scrutinizer-share-copy' ).on( 'click', function() {
+					$( '#scrutinizer-share-url' ).select();
+					copyToClipboard( shareUrl );
+					$( this ).html( '✓ Copied' );
+					setTimeout( function() {
+						$( '#scrutinizer-share-copy' ).html( 'Copy' );
+					}, 2000 );
+				} );
+
+				// Revoke handler
+				$( '#scrutinizer-share-revoke' ).on( 'click', function() {
+					var id = $( this ).data( 'id' );
+					var token = $( this ).data( 'token' );
+					revokeSharedReport( id, token );
+				} );
+			} )
+			.catch( function( err ) {
+				console.error( 'Share error:', err );
+				$btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-lock"></span> Encrypt &amp; Share' );
+				$result.html( '<p class="scrutinizer-share-error">Encryption failed: ' + esc( err.message || 'Unknown error' ) + '</p>' ).show();
+			} );
+	}
+
+	/**
+	 * Upload encrypted payload to the relay.
+	 */
+	function uploadToRelay( ciphertext, iv, keyB64, ttlDays, burnAfterReading, hasPassphrase ) {
+		return new Promise( function( resolve, reject ) {
+			var payload = {
+				ciphertext: ciphertext,
+				iv: iv,
+				ttl_days: ttlDays,
+				expire_after_reading: burnAfterReading,
+				has_passphrase: hasPassphrase
+			};
+
+			// Use fetch to avoid jQuery AJAX CORS defaults
+			fetch( RELAY_URL + '/r/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify( payload )
+			} )
+			.then( function( resp ) {
+				if ( ! resp.ok ) {
+					return resp.json().then( function( data ) {
+						throw new Error( data.error || 'Upload failed' );
+					} );
+				}
+				return resp.json();
+			} )
+			.then( resolve )
+			.catch( reject );
+		} );
+	}
+
+	/**
+	 * Wrap a key with a passphrase using PBKDF2 + AES-GCM.
+	 */
+	function wrapKeyWithPassphrase( keyBytes, salt, passphrase ) {
+		var enc = new TextEncoder();
+		return crypto.subtle.importKey( 'raw', enc.encode( passphrase ), 'PBKDF2', false, [ 'deriveBits', 'deriveKey' ] )
+			.then( function( passphraseKey ) {
+				return crypto.subtle.deriveKey(
+					{ name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+					passphraseKey,
+					{ name: 'AES-GCM', length: 256 },
+					false,
+					[ 'encrypt' ]
+				);
+			} )
+			.then( function( wrappingKey ) {
+				var wrapIv = crypto.getRandomValues( new Uint8Array( 12 ) );
+				return crypto.subtle.encrypt(
+					{ name: 'AES-GCM', iv: wrapIv },
+					wrappingKey,
+					keyBytes
+				).then( function( wrapped ) {
+					// Prepend the wrap IV to the wrapped data
+					var result = new Uint8Array( wrapIv.length + new Uint8Array( wrapped ).length );
+					result.set( wrapIv );
+					result.set( new Uint8Array( wrapped ), wrapIv.length );
+					return result;
+				} );
+			} );
+	}
+
+	/**
+	 * Revoke a shared report via the relay.
+	 */
+	function revokeSharedReport( id, token ) {
+		var $btn = $( '#scrutinizer-share-revoke' );
+		$btn.prop( 'disabled', true );
+
+		fetch( RELAY_URL + '/r/' + id, {
+			method: 'DELETE',
+			headers: { 'X-Revoke-Token': token }
+		} )
+		.then( function( resp ) {
+			return resp.json();
+		} )
+		.then( function( data ) {
+			if ( data.success ) {
+				$( '#scrutinizer-share-result' ).html(
+					'<div class="scrutinizer-share-revoked"><span class="dashicons dashicons-yes-alt"></span> Report revoked. The link will no longer work.</div>'
+				);
+			} else {
+				$btn.prop( 'disabled', false );
+				$( '#scrutinizer-share-result' ).append(
+					'<p class="scrutinizer-share-error">Revocation failed: ' + esc( data.error || 'Unknown error' ) + '</p>'
+				);
+			}
+		} )
+		.catch( function() {
+			$btn.prop( 'disabled', false );
+		} );
+	}
+
+	/**
+	 * Base64url encode a Uint8Array.
+	 */
+	function base64urlEncode( bytes ) {
+		var binary = '';
+		for ( var i = 0; i < bytes.length; i++ ) {
+			binary += String.fromCharCode( bytes[ i ] );
+		}
+		return btoa( binary ).replace( /\+/g, '-' ).replace( /\//g, '_' ).replace( /=+$/, '' );
 	}
 
 	/**

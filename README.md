@@ -1,30 +1,103 @@
 # Scrutinizer
 
-WordPress Performance Profiler — See where your server request duration is spent.
+**WordPress Performance Profiler — See where your server request duration is spent.**
 
-> **Status:** Early development. Not yet available on WordPress.org.
+Scrutinizer is a read-only profiling plugin for WordPress. It instruments every hook callback during a page request and attributes the time to its source — plugin, theme, core, mu-plugin, or drop-in — so you can see exactly what's slow and why.
 
-## What It Does
+> By the author of the [P3 (Plugin Performance Profiler)](https://wordpress.org/plugins/p3-profiler/). Scrutinizer is the spiritual successor: rebuilt from scratch for modern WordPress, with real attribution, SQL analysis, and zero-knowledge sharing.
 
-Scrutinizer hooks into WordPress request processing and tells you exactly where time goes: which plugins, which hooks, which callbacks. No guesswork, no approximation — monotonic high-resolution timing with exclusive and inclusive cost attribution.
+## What It Measures
 
-- **Hook Execution Trace** — See every hooked callback with its exclusive time cost
-- **Plugin & theme attribution** — Callbacks resolved to their source plugin/theme automatically
-- **Baseline comparison** — Save a profile, change something, compare the diff
-- **Share reports** — POST to scrutineer.dev for time-limited shareable links
-- **WP-CLI** — Full data management from the command line
+| What | How |
+|------|-----|
+| **Server Request Duration** | Total wall-clock time for the PHP request |
+| **Source Attribution** | Every hook callback traced to its plugin/theme/core with exclusive and inclusive timing |
+| **Database Queries** | Query text (sanitized), execution time, caller, and source |
+| **HTTP Calls** | External requests with URL, duration, and response code |
+| **Autoloaded Options** | Option names, sizes, and sources contributing to autoload bloat |
+| **Enqueued Assets** | Scripts and stylesheets with sizes and dependency chains |
+| **Hook Execution Trace** | Full callback tree by WordPress lifecycle phase |
+| **Timeline** | Visual timeline with phase milestone markers |
+
+## Key Features
+
+- **Background capture** with configurable sample rate (0.1%–100%)
+- **Route-based grouping** with human-readable labels and status code breakdown
+- **Pin & annotate** profiles with notes and tags
+- **Automatic retention** — TTL + per-route cap, pinned profiles exempt
+- **Cron inventory** — all registered WordPress cron events at a glance
+- **REST API** — five read-only endpoints for AI agent integration
+- **Send to Agent** — one-click prompt with short-lived credentials
+- **Send to Support** — zero-knowledge encrypted sharing via [scrutinizer.dev](https://scrutinizer.dev)
+- **WP-CLI** — `wp scrutinizer status|list|view|purge|compare|export`
 
 ## Requirements
 
 - WordPress 6.0+
 - PHP 7.4+
 
-## Development
+## Installation
+
+### From GitHub Release
+
+1. Download the latest `.zip` from [Releases](https://github.com/scrutineerhq/scrutinizer/releases)
+2. In WordPress admin → Plugins → Add New → Upload Plugin
+3. Upload the zip and activate
+
+### From Source
 
 ```bash
-composer install
-composer lint
+git clone https://github.com/scrutineerhq/scrutinizer.git
+cd scrutinizer
+composer install --no-dev
 ```
+
+Copy or symlink the `scrutinizer` directory into `wp-content/plugins/`.
+
+## Quick Start
+
+1. Activate the plugin
+2. Go to **Tools → Scrutinizer**
+3. Profiles start capturing automatically at 10% sample rate
+4. Click any route to see the full profile detail
+5. Use the **⚙️** gear to adjust capture rate and retention
+
+## REST API
+
+Scrutinizer exposes five read-only REST endpoints under `wp-json/scrutinizer/`:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/v1/prompt` | System prompt — the API contract (text/plain) |
+| `GET` | `/v1/diagnostics` | Site fingerprint with opt-in fields |
+| `GET` | `/v1/routes` | Profiled routes with summary stats |
+| `GET` | `/v1/profile/{id}` | Full compiled profile |
+| `GET` | `/v1/compare/{a}/{b}` | Two profiles with deltas |
+
+Authentication: WordPress Application Passwords. The **Send to Agent** button generates a short-lived credential automatically.
+
+## Encrypted Sharing
+
+Share a performance report with your support team or plugin developer:
+
+1. Open a profile from the **History** tab
+2. Click **Share** in the toolbar
+3. Choose expiry, sections to include, and optional passphrase
+4. Click **Encrypt & Share**
+
+The report is encrypted in your browser with AES-256-GCM before upload. The relay server at `scrutinizer.dev` stores only ciphertext it cannot read. The decryption key lives in the URL fragment (`#key`) and never leaves your browser. Links are revocable and auto-expire.
+
+## Design Philosophy
+
+- **Read-only** — Scrutinizer measures. It never modifies your site.
+- **Data first** — The dashboard leads with profiling data, not settings.
+- **Trustworthy defaults** — Safe to activate and forget.
+- **WordPress native** — Standard admin patterns, no custom dark themes.
+- **Privacy by design** — No telemetry. SQL sanitized. Sharing is opt-in and encrypted.
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 

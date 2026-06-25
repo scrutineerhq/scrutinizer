@@ -970,6 +970,178 @@
 	outline: none;
 }
 
+#scrutinizer-share-btn {
+	margin-left: auto;
+}
+
+#scrutinizer-share-btn .dashicons {
+	vertical-align: text-bottom;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	margin-right: 2px;
+}
+
+/* ----- Share Panel ----- */
+
+.scrutinizer-share-panel {
+	background: #f6f7f7;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 16px 20px;
+	margin-bottom: 16px;
+}
+
+.scrutinizer-share-panel h4 {
+	margin: 0 0 8px;
+	font-size: 14px;
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.scrutinizer-share-panel h4 .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+	color: #2271b1;
+}
+
+.scrutinizer-share-panel > .description {
+	color: #50575e;
+	font-size: 13px;
+	margin-bottom: 12px;
+}
+
+.scrutinizer-share-options {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.scrutinizer-share-option {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+}
+
+.scrutinizer-share-option select {
+	padding: 4px 8px;
+	border: 1px solid #c3c4c7;
+	border-radius: 3px;
+	font-size: 12px;
+}
+
+#scrutinizer-share-passphrase-field {
+	padding-left: 24px;
+}
+
+#scrutinizer-share-passphrase-field input {
+	width: 250px;
+	padding: 4px 8px;
+	border: 1px solid #c3c4c7;
+	border-radius: 3px;
+	font-size: 12px;
+}
+
+.scrutinizer-share-sections {
+	margin-bottom: 12px;
+	font-size: 13px;
+}
+
+.scrutinizer-share-sections summary {
+	cursor: pointer;
+	color: #2271b1;
+	font-size: 12px;
+}
+
+.scrutinizer-share-section-list {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 4px 16px;
+	margin-top: 8px;
+	padding-left: 4px;
+}
+
+.scrutinizer-share-section-list label {
+	font-size: 12px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.scrutinizer-share-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.scrutinizer-share-actions .dashicons {
+	vertical-align: text-bottom;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+.scrutinizer-share-success {
+	margin-top: 12px;
+}
+
+.scrutinizer-share-success > p {
+	margin: 0 0 8px;
+	font-size: 13px;
+	font-weight: 500;
+	color: #1d2327;
+}
+
+.scrutinizer-share-success .dashicons-yes-alt {
+	color: #00a32a;
+}
+
+.scrutinizer-share-url-row {
+	display: flex;
+	gap: 6px;
+	margin-bottom: 6px;
+}
+
+.scrutinizer-share-url-row input {
+	flex: 1;
+	padding: 6px 8px;
+	border: 1px solid #c3c4c7;
+	border-radius: 3px;
+	font-family: monospace;
+	font-size: 11px;
+	background: #fff;
+}
+
+.scrutinizer-share-error {
+	color: #d63638;
+	font-size: 13px;
+	margin: 8px 0 0;
+}
+
+.scrutinizer-share-revoked {
+	margin-top: 8px;
+	font-size: 13px;
+	color: #50575e;
+}
+
+.scrutinizer-share-revoked .dashicons {
+	color: #00a32a;
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+.dashicons.spin {
+	animation: spin 1s linear infinite;
+}
+
 /* ----- History filters ----- */
 
 .scrutinizer-history-filters {
