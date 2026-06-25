@@ -2974,8 +2974,11 @@
 #scrutinizer-settings-panel > .scrutinizer-bg-controls,
 #scrutinizer-settings-panel > .scrutinizer-qp-controls {
 	margin: 0;
-	padding: 24px 32px;
+	padding: 20px 32px;
+	border: none;
 	border-bottom: 1px solid #dcdcde;
+	border-radius: 0;
+	box-shadow: none;
 }
 
 #scrutinizer-settings-panel > .scrutinizer-status-card:first-child {
@@ -3008,15 +3011,15 @@
 
 #scrutinizer-settings-panel h3 {
 	margin-top: 0;
-	margin-bottom: 16px;
+	margin-bottom: 12px;
 	font-size: 14px;
 	font-weight: 600;
 }
 
 #scrutinizer-settings-panel h3:not(:first-child) {
-	margin-top: 24px;
-	padding-top: 20px;
-	border-top: 1px solid #f0f0f1;
+	margin-top: 0;
+	padding-top: 0;
+	border-top: none;
 }
 
 /* ------------------------------------------------------------------ */
