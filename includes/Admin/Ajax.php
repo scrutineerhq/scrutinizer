@@ -550,9 +550,9 @@ class Ajax {
 		if ( ! empty( $route_key ) ) {
 			$route_pinned = Storage::search_profiles(
 				array(
-					'route_key'  => $route_key,
+					'route_key'   => $route_key,
 					'pinned_only' => true,
-					'limit'      => 20,
+					'limit'       => 20,
 				)
 			);
 		}
@@ -567,6 +567,7 @@ class Ajax {
 				return (int) $p['id'] !== $profile_id;
 			}
 		);
+
 		$all_pinned = array_filter(
 			$all_pinned,
 			function ( $p ) use ( $profile_id, $route_key ) {
