@@ -1383,11 +1383,13 @@
 }
 
 #scrutinizer-share-btn .dashicons,
-#scrutinizer-export-btn .dashicons {
-	vertical-align: text-bottom;
+#scrutinizer-export-btn .dashicons,
+#scrutinizer-compare-pick-btn .dashicons {
+	vertical-align: middle;
 	font-size: 16px;
 	width: 16px;
 	height: 16px;
+	line-height: 16px;
 	margin-right: 2px;
 }
 
@@ -3286,44 +3288,3 @@ details.scrutinizer-term > .scrutinizer-term-explain {
 	opacity: 0.5;
 }
 
-/* DEBUG: Visual padding inspection — REMOVE AFTER */
-#scrutinizer-settings-panel {
-	border: 4px solid red !important;
-}
-#scrutinizer-settings-panel > .scrutinizer-status-card {
-	border: 4px solid blue !important;
-	background: rgba(0, 0, 255, 0.08) !important;
-}
-#scrutinizer-settings-panel > .scrutinizer-controls {
-	border: 4px solid green !important;
-	background: rgba(0, 255, 0, 0.08) !important;
-}
-#scrutinizer-settings-panel > .scrutinizer-bg-controls {
-	border: 4px solid orange !important;
-	background: rgba(255, 165, 0, 0.08) !important;
-}
-#scrutinizer-settings-panel > .scrutinizer-qp-controls {
-	border: 4px solid purple !important;
-	background: rgba(128, 0, 128, 0.08) !important;
-}
-.scrutinizer-modal-header {
-	border: 4px solid magenta !important;
-}
-.scrutinizer-modal-body {
-	border: 4px solid cyan !important;
-}
-.scrutinizer-modal-content {
-	border: 4px solid lime !important;
-}
-.scrutinizer-toggle-label {
-	border: 2px solid hotpink !important;
-}
-.scrutinizer-rate-control {
-	border: 2px solid crimson !important;
-}
-.scrutinizer-overhead-note {
-	border: 2px solid teal !important;
-}
-h3 {
-	border: 2px solid gold !important;
-}
