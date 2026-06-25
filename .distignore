@@ -1,0 +1,29 @@
+# Directories
+.context/
+.git/
+.github/
+tests/
+node_modules/
+vendor/
+
+# Files
+.distignore
+.editorconfig
+.gitattributes
+.gitignore
+.phpcs.xml.dist
+composer.json
+composer.lock
+package.json
+package-lock.json
+phpunit.xml.dist
+CONTRIBUTING.md
+Gruntfile.js
+Makefile
+
+# Dev files
+*.dist
+*.yml
+*.yaml
+!readme.txt
+scrutinizer_debug.php
