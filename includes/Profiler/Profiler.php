@@ -344,6 +344,11 @@ class Profiler {
 			$response_status = 0;
 		}
 
+		// Skip non-successful responses when the filter is enabled.
+		if ( get_option( 'scrutinizer_only_successful', false ) && 200 !== $response_status ) {
+			return;
+		}
+
 		// Guard against negative durations from clock issues.
 		if ( $duration_ns < 0 ) {
 			$duration_ns = 0;

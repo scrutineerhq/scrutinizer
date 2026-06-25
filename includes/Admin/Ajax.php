@@ -27,6 +27,7 @@ class Ajax {
 		add_action( 'wp_ajax_scrutinizer_get_profile_detail', array( __CLASS__, 'get_profile_detail' ) );
 		add_action( 'wp_ajax_scrutinizer_delete_profile', array( __CLASS__, 'delete_profile' ) );
 		add_action( 'wp_ajax_scrutinizer_toggle_background', array( __CLASS__, 'toggle_background' ) );
+		add_action( 'wp_ajax_scrutinizer_toggle_only_successful', array( __CLASS__, 'toggle_only_successful' ) );
 		add_action( 'wp_ajax_scrutinizer_pin_profile', array( __CLASS__, 'pin_profile' ) );
 		add_action( 'wp_ajax_scrutinizer_unpin_profile', array( __CLASS__, 'unpin_profile' ) );
 		add_action( 'wp_ajax_scrutinizer_update_annotation', array( __CLASS__, 'update_annotation' ) );
@@ -231,6 +232,32 @@ class Ajax {
 				'message' => $enabled
 					? __( 'Background profiling enabled.', 'scrutinizer' )
 					: __( 'Background profiling disabled.', 'scrutinizer' ),
+			)
+		);
+	}
+
+	/**
+	 * Toggle "only successful requests" filter.
+	 */
+	public static function toggle_only_successful() {
+		check_ajax_referer( 'scrutinizer_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Permission denied.', 'scrutinizer' ) ),
+				403
+			);
+		}
+
+		$enabled = ! empty( $_POST['enabled'] );
+		update_option( 'scrutinizer_only_successful', $enabled, true );
+
+		wp_send_json_success(
+			array(
+				'enabled' => $enabled,
+				'message' => $enabled
+					? __( 'Only capturing successful (200) requests.', 'scrutinizer' )
+					: __( 'Capturing all requests regardless of status.', 'scrutinizer' ),
 			)
 		);
 	}

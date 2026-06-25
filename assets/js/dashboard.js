@@ -441,6 +441,20 @@
 			saveBackgroundRate( rate );
 		} );
 
+		// Only-successful toggle.
+		$( document ).on( 'change', '#scrutinizer-only-success', function() {
+			var on = $( this ).is( ':checked' ) ? 1 : 0;
+			$.post( scrutinizerAdmin.ajaxUrl, {
+				action: 'scrutinizer_toggle_only_successful',
+				nonce:  scrutinizerAdmin.nonce,
+				enabled: on
+			}, function( response ) {
+				if ( response.success ) {
+					showNotice( response.data.message, 'success' );
+				}
+			} );
+		} );
+
 		// Route filter dropdown.
 		$( document ).on( 'change', '#scrutinizer-route-filter', function() {
 			routeFilter = $( this ).val();
@@ -778,6 +792,12 @@
 		html += '</div>';
 		html += '</div>';
 		html += '<p class="scrutinizer-overhead-note">Instrumentation overhead is typically 2\u20135 ms per request. Unattributed time in each profile includes this cost.</p>';
+		if ( currentRate >= 50 ) {
+			html += '<p class="scrutinizer-overhead-note" style="color:#d63638;font-weight:500;">\u26a0 High capture rate. Each profile generates 2\u201310 MB of trace data. Not recommended for production sites or servers with limited disk/memory.</p>';
+		}
+		html += '<label class="scrutinizer-toggle-label" style="margin-top:8px;">';
+		html += '<input type="checkbox" id="scrutinizer-only-success"' + ( scrutinizerAdmin.onlySuccessful ? ' checked' : '' ) + '> ';
+		html += 'Only capture successful requests (HTTP 200)</label>';
 		html += '</div>';
 
 		$( '#scrutinizer-controls' ).after( html );
