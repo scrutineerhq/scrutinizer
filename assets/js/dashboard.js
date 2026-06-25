@@ -1870,12 +1870,16 @@
 				} else if ( hCall.status >= 300 ) {
 					hStatusCls = ' http-redirect';
 				}
-				// Duration-based dot color: fast (<100ms) = green, medium (<500ms) = orange, slow = red.
-				var hDotCls = 'http-fast';
-				if ( hCall.duration_ms >= 500 ) {
-					hDotCls = 'http-slow';
-				} else if ( hCall.duration_ms >= 100 ) {
-					hDotCls = 'http-medium';
+				// Source-attributed dot color via getSourceColor, with error/redirect override.
+				var hDotColor = '';
+				if ( hCall.is_error || hCall.status >= 400 ) {
+					hDotColor = '#c44337';
+				} else if ( hCall.status >= 300 ) {
+					hDotColor = '#dba617';
+				} else if ( hCall.caller && hCall.caller.attribution ) {
+					hDotColor = getSourceColor( hCall.caller.attribution.slug || 'unknown', hCall.caller.attribution.type || 'unknown' );
+				} else {
+					hDotColor = '#50575e';
 				}
 				var hTitle = hCall.method + ' ' + hCall.url + '\n' + hDurMs + ' ms';
 				if ( hCall.status ) {
@@ -1886,7 +1890,7 @@
 				}
 				html += '<div class="http-lollipop' + hStatusCls + '" style="left:' + hLeftPct + '%;height:' + hStemHeight + 'px" title="' + esc( hTitle ) + '">';
 				html += '<span class="http-stem"></span>';
-				html += '<span class="http-dot ' + hDotCls + '"></span>';
+				html += '<span class="http-dot" style="background:' + hDotColor + '"></span>';
 				html += '<span class="http-label">' + esc( truncate( hHost, 24 ) ) + ' <em>' + hDurMs + 'ms</em></span>';
 				html += '</div>';
 			}
