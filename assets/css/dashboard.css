@@ -974,7 +974,8 @@
 	margin-left: auto;
 }
 
-#scrutinizer-share-btn .dashicons {
+#scrutinizer-share-btn .dashicons,
+#scrutinizer-export-btn .dashicons {
 	vertical-align: text-bottom;
 	font-size: 16px;
 	width: 16px;

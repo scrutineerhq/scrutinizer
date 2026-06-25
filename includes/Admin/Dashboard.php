@@ -88,6 +88,7 @@ class Dashboard {
 			array(
 				'ajaxUrl'              => admin_url( 'admin-ajax.php' ),
 				'nonce'                => wp_create_nonce( 'scrutinizer_nonce' ),
+				'version'              => SCRUTINIZER_VERSION,
 				'isActive'             => Session::has_valid_cookie(),
 				'sessionId'            => Session::get_session_id(),
 				'lastSessionId'        => $last_session_id,
