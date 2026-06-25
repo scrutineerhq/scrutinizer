@@ -1768,6 +1768,9 @@
 	letter-spacing: 0.5px;
 	white-space: nowrap;
 	line-height: 16px;
+	transform-origin: left center;
+	will-change: transform;
+	backface-visibility: hidden;
 }
 
 .scrutinizer-query-density {
@@ -1779,6 +1782,8 @@
 	border-radius: 2px;
 	overflow: hidden;
 	transform-origin: left center;
+	will-change: transform;
+	backface-visibility: hidden;
 }
 
 .density-bar {
@@ -1818,6 +1823,8 @@
 	position: relative;
 	height: 28px;
 	transform-origin: left center;
+	will-change: transform;
+	backface-visibility: hidden;
 }
 
 .memory-sparkline-svg {

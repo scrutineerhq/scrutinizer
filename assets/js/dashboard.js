@@ -4964,7 +4964,8 @@
 						sql: q.sql || '',
 						time_ms: q.time_ms || 0,
 						source: q.source || '',
-						source_type: q.source_type || ''
+						source_type: q.source_type || '',
+						offset_ms: ( q.offset_ns || 0 ) / 1e6
 					};
 				} );
 			}
@@ -4978,7 +4979,8 @@
 						offset_ms: ( t.offset_ns || 0 ) / 1e6,
 						duration_ms: ( t.wall_ns || t.excl_ns || 0 ) / 1e6,
 						pct_start: t.pct_start || 0,
-						pct_width: t.pct_width || 0
+						pct_width: t.pct_width || 0,
+						mem_after: t.mem_after || 0
 					};
 				} );
 			}
@@ -5046,7 +5048,8 @@
 						caller: callerStr,
 						source_type: sourceType,
 						source_name: sourceName,
-						is_error: h.is_error || false
+						is_error: h.is_error || false,
+						offset_ms: ( h.offset_ns || 0 ) / 1e6
 					};
 				} );
 			}
