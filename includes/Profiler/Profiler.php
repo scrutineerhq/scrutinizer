@@ -651,13 +651,14 @@ class Profiler {
 		$skip_classes = array( 'WP_Hook', 'WP_Http', 'WP_Http_Curl', 'WP_Http_Streams', 'Requests', 'WpOrg\\Requests\\Requests' );
 
 		foreach ( $trace as $frame ) {
-			if ( empty( $frame['file'] ) ) {
-				continue;
-			}
-
-			$file    = $frame['file'];
+			$file    = isset( $frame['file'] ) ? $frame['file'] : '';
 			$fn_name = isset( $frame['function'] ) ? $frame['function'] : '';
 			$class   = isset( $frame['class'] ) ? $frame['class'] : '';
+
+			// Skip frames without file or function.
+			if ( '' === $file && '' === $fn_name ) {
+				continue;
+			}
 
 			// Skip profiler frames — but not user callbacks invoked from Instrumentor.
 			if ( false !== strpos( $file, 'Profiler.php' ) ) {
@@ -701,7 +702,7 @@ class Profiler {
 			}
 
 			// Use the first non-internal file for attribution.
-			if ( empty( $source_file ) ) {
+			if ( empty( $source_file ) && '' !== $file ) {
 				$source_file = $file;
 			}
 		}
