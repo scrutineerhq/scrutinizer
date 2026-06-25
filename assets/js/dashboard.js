@@ -254,7 +254,7 @@
 		$( document ).on( 'click', '#scrutinizer-stop', stopProfiling );
 
 		// Copy activation URL.
-		$( document ).on( 'click', '#scrutinizer-copy-url', copyActivationUrl );
+		$( document ).on( 'click', '#scrutinizer-copy-url, #scrutinizer-visitor-copy', copyActivationUrl );
 
 		// Grouped row → drill into route.
 		$( document ).on( 'click', '.scrutinizer-route-row', function() {
@@ -1014,14 +1014,25 @@
 		if ( $modal.is( ':visible' ) ) {
 			$modal.fadeOut( 150 );
 		}
+
+		// Auto-copy URL to clipboard.
+		if ( navigator.clipboard ) {
+			navigator.clipboard.writeText( url );
+		}
+
+		var isMac = /Mac|iPhone|iPad/.test( navigator.userAgent );
+		var shortcut = isMac ? '<kbd>⌘ Shift N</kbd>' : '<kbd>Ctrl+Shift+N</kbd>';
+
 		var html = '<div class="scrutinizer-visitor-guidance">';
-		html += '<h3><span class="dashicons dashicons-privacy"></span> Open in an Incognito Window</h3>';
-		html += '<p>To measure what logged-out visitors experience, open this URL in an <strong>incognito/private window</strong> so no login cookies persist:</p>';
+		html += '<div class="scrutinizer-visitor-copied">';
+		html += '<span class="dashicons dashicons-yes-alt"></span>';
+		html += '<strong>URL copied to clipboard</strong>';
+		html += '</div>';
+		html += '<p>Open an <strong>incognito window</strong> (' + shortcut + '), paste the URL, and browse your site. Come back here and click <strong>Stop Profiling</strong> when done.</p>';
 		html += '<div class="scrutinizer-url-box">';
 		html += '<input type="text" readonly class="widefat" id="scrutinizer-visitor-url" value="' + esc( url ) + '" />';
-		html += '<button type="button" class="button" onclick="var u=document.getElementById(\'scrutinizer-visitor-url\');u.select();navigator.clipboard.writeText(u.value);this.textContent=\'Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy\';},2000);">Copy</button>';
+		html += '<button type="button" class="button" id="scrutinizer-visitor-copy">Copy again</button>';
 		html += '</div>';
-		html += '<p class="description" style="margin-top:8px;">Keyboard shortcut: <kbd>Ctrl+Shift+N</kbd> (Chrome/Edge) or <kbd>Cmd+Shift+N</kbd> (Safari).</p>';
 		html += '</div>';
 		$( '#scrutinizer-capture-status' ).html( html );
 	}
@@ -1046,7 +1057,7 @@
 	}
 
 	function copyActivationUrl() {
-		var input = document.getElementById( 'scrutinizer-activation-url' );
+		var input = document.getElementById( 'scrutinizer-activation-url' ) || document.getElementById( 'scrutinizer-visitor-url' );
 		if ( input ) {
 			input.select();
 			if ( navigator.clipboard ) {
