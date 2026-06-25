@@ -4153,6 +4153,7 @@
 		html += '<tr><td><code>GET</code></td><td><code>/v1/routes</code></td><td>All profiled routes with summary statistics</td></tr>';
 		html += '<tr><td><code>GET</code></td><td><code>/v1/profile/{id}</code></td><td>Full profile detail for one request</td></tr>';
 		html += '<tr><td><code>GET</code></td><td><code>/v1/compare/{a}/{b}</code></td><td>Side-by-side comparison of two profiles</td></tr>';
+		html += '<tr><td><code>GET</code></td><td><code>/v1/manifest</code></td><td>Machine-readable API manifest for AI agent discovery (public)</td></tr>';
 		html += '</tbody></table>';
 		if ( apiBase ) {
 			html += '<p class="scrutinizer-api-base">Base URL: <code>' + esc( apiBase ) + '</code></p>';

@@ -107,6 +107,17 @@ class RestApi {
 				),
 			)
 		);
+
+		// Manifest — public, no auth required.
+		register_rest_route(
+			self::NAMESPACE,
+			'/manifest',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( __CLASS__, 'handle_manifest' ),
+				'permission_callback' => '__return_true',
+			)
+		);
 	}
 
 	/**
@@ -194,6 +205,96 @@ class RestApi {
 	 */
 	public static function clear_access_log() {
 		delete_option( 'scrutinizer_api_log' );
+	}
+
+	/**
+	 * Handle GET /v1/manifest.
+	 *
+	 * Returns a machine-readable API manifest for AI agent auto-discovery.
+	 * Public endpoint — no authentication required.
+	 *
+	 * @param \WP_REST_Request $request  Request object.
+	 * @return \WP_REST_Response
+	 */
+	public static function handle_manifest( $request ) {
+		$base_url = rest_url( self::NAMESPACE );
+
+		$manifest = array(
+			'schema_version' => '1.0',
+			'name'           => 'Scrutineer',
+			'description'    => 'WordPress performance profiler — read-only API for site performance data.',
+			'version'        => defined( 'SCRUTINIZER_VERSION' ) ? SCRUTINIZER_VERSION : '1.0.0',
+			'auth'           => array(
+				'type'        => 'http',
+				'scheme'      => 'basic',
+				'description' => 'WordPress Application Password. Use the "Send to Agent" button in the Scrutineer dashboard to generate a short-lived credential.',
+			),
+			'base_url'       => $base_url,
+			'tools'          => array(
+				array(
+					'name'        => 'get_prompt',
+					'description' => 'Get the system prompt that describes how to interpret Scrutineer data. Read this first.',
+					'endpoint'    => '/v1/prompt',
+					'method'      => 'GET',
+					'parameters'  => array(),
+					'returns'     => 'text/plain',
+				),
+				array(
+					'name'        => 'get_diagnostics',
+					'description' => 'Get server environment details (PHP version, memory limits, OPcache status, etc). Only includes fields the site admin has opted in to share.',
+					'endpoint'    => '/v1/diagnostics',
+					'method'      => 'GET',
+					'parameters'  => array(),
+					'returns'     => 'application/json',
+				),
+				array(
+					'name'        => 'get_routes',
+					'description' => 'List all profiled routes with summary statistics (count, avg/min/max/p95 duration, memory).',
+					'endpoint'    => '/v1/routes',
+					'method'      => 'GET',
+					'parameters'  => array(),
+					'returns'     => 'application/json',
+				),
+				array(
+					'name'        => 'get_profile',
+					'description' => 'Get full profile detail for one request, including timeline, trace, queries, HTTP calls, and source breakdown.',
+					'endpoint'    => '/v1/profile/{id}',
+					'method'      => 'GET',
+					'parameters'  => array(
+						array(
+							'name'        => 'id',
+							'type'        => 'integer',
+							'required'    => true,
+							'description' => 'Profile ID from the routes listing.',
+						),
+					),
+					'returns'     => 'application/json',
+				),
+				array(
+					'name'        => 'compare_profiles',
+					'description' => 'Side-by-side comparison of two profiles, showing deltas in duration, memory, queries, and sources.',
+					'endpoint'    => '/v1/compare/{id_a}/{id_b}',
+					'method'      => 'GET',
+					'parameters'  => array(
+						array(
+							'name'        => 'id_a',
+							'type'        => 'integer',
+							'required'    => true,
+							'description' => 'First profile ID (reference).',
+						),
+						array(
+							'name'        => 'id_b',
+							'type'        => 'integer',
+							'required'    => true,
+							'description' => 'Second profile ID (comparison).',
+						),
+					),
+					'returns'     => 'application/json',
+				),
+			),
+		);
+
+		return new \WP_REST_Response( $manifest, 200 );
 	}
 
 	/**
