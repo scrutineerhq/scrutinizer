@@ -776,6 +776,7 @@
 		html += '<span class="scrutinizer-rate-custom">or <input type="number" id="scrutinizer-custom-rate" min="0" max="100" step="0.1" value="' + currentRate + '">%</span>';
 		html += '</div>';
 		html += '</div>';
+		html += '<p class="scrutinizer-overhead-note">Instrumentation overhead is typically 2\u20135 ms per request. Unattributed time in each profile includes this cost.</p>';
 		html += '</div>';
 
 		$( '#scrutinizer-controls' ).after( html );
@@ -1169,11 +1170,97 @@
 		var html = '<div id="scrutinizer-route-detail">';
 		html += '<button type="button" class="button button-link" id="scrutinizer-back-to-list">← Back to routes</button>';
 		html += '<h2>' + esc( currentRoute ) + '</h2>';
+
+		// Trend sparkline.
+		if ( routeData && routeData.length >= 2 ) {
+			html += renderSparkline( routeData );
+		}
+
 		html += '<div id="scrutinizer-route-profiles"></div>';
 		html += '</div>';
 
 		$( '#scrutinizer-results' ).after( html );
 		renderRouteTable( routeData );
+	}
+
+	/* ------------------------------------------------------------------ */
+	/*  Trend Sparkline (F10)                                              */
+	/* ------------------------------------------------------------------ */
+
+	function renderSparkline( profiles ) {
+		// Sort by captured_at ascending (oldest first).
+		var sorted = profiles.slice().sort( function( a, b ) {
+			return ( a.captured_at || '' ).localeCompare( b.captured_at || '' );
+		} );
+
+		// Limit to last 50 points.
+		if ( sorted.length > 50 ) {
+			sorted = sorted.slice( sorted.length - 50 );
+		}
+
+		var points = [];
+		for ( var i = 0; i < sorted.length; i++ ) {
+			var ms = parseInt( sorted[ i ].duration_ns, 10 ) / 1e6;
+			points.push( ms );
+		}
+
+		if ( points.length < 2 ) {
+			return '';
+		}
+
+		var minVal = Math.min.apply( null, points );
+		var maxVal = Math.max.apply( null, points );
+		var range  = maxVal - minVal || 1;
+
+		// SVG dimensions.
+		var w = 360;
+		var h = 60;
+		var pad = 4;
+		var plotW = w - pad * 2;
+		var plotH = h - pad * 2;
+
+		// Build polyline points.
+		var svgPoints = [];
+		for ( var j = 0; j < points.length; j++ ) {
+			var x = pad + ( j / ( points.length - 1 ) ) * plotW;
+			var y = pad + plotH - ( ( points[ j ] - minVal ) / range ) * plotH;
+			svgPoints.push( x.toFixed( 1 ) + ',' + y.toFixed( 1 ) );
+		}
+
+		// Fill area under curve.
+		var areaPoints = svgPoints.slice();
+		areaPoints.push( ( pad + plotW ).toFixed( 1 ) + ',' + ( pad + plotH ).toFixed( 1 ) );
+		areaPoints.push( pad.toFixed( 1 ) + ',' + ( pad + plotH ).toFixed( 1 ) );
+
+		// Stats.
+		var avg   = 0;
+		for ( var si = 0; si < points.length; si++ ) { avg += points[ si ]; }
+		avg = avg / points.length;
+		var latest = points[ points.length - 1 ];
+		var trend  = latest - points[ 0 ];
+		var trendLabel = trend > 0 ? '+' + trend.toFixed( 0 ) + ' ms' : trend.toFixed( 0 ) + ' ms';
+		var trendCls   = trend > 20 ? 'trend-slower' : ( trend < -20 ? 'trend-faster' : 'trend-stable' );
+
+		var html = '<div class="scrutinizer-sparkline-row">';
+		html += '<div class="scrutinizer-sparkline-chart">';
+		html += '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+		html += '<polygon points="' + areaPoints.join( ' ' ) + '" fill="#2271b1" opacity="0.08"/>';
+		html += '<polyline points="' + svgPoints.join( ' ' ) + '" fill="none" stroke="#2271b1" stroke-width="1.5" stroke-linejoin="round"/>';
+		// Dot on latest point.
+		var lastPt = svgPoints[ svgPoints.length - 1 ].split( ',' );
+		html += '<circle cx="' + lastPt[0] + '" cy="' + lastPt[1] + '" r="3" fill="#2271b1"/>';
+		html += '</svg>';
+		html += '</div>';
+		html += '<div class="scrutinizer-sparkline-stats">';
+		html += '<span class="sparkline-stat"><span class="sparkline-stat-label">Latest</span> ' + latest.toFixed( 0 ) + ' ms</span>';
+		html += '<span class="sparkline-stat"><span class="sparkline-stat-label">Average</span> ' + avg.toFixed( 0 ) + ' ms</span>';
+		html += '<span class="sparkline-stat"><span class="sparkline-stat-label">Min</span> ' + minVal.toFixed( 0 ) + ' ms</span>';
+		html += '<span class="sparkline-stat"><span class="sparkline-stat-label">Max</span> ' + maxVal.toFixed( 0 ) + ' ms</span>';
+		html += '<span class="sparkline-stat ' + trendCls + '"><span class="sparkline-stat-label">Trend</span> ' + trendLabel + '</span>';
+		html += '</div>';
+		html += '</div>';
+
+		return html;
 	}
 
 	function renderRouteTable( profiles ) {

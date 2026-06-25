@@ -2689,6 +2689,70 @@
 	font-size: 13px;
 }
 
+.scrutinizer-overhead-note {
+	margin: 8px 0 0;
+	font-size: 12px;
+	color: #787c82;
+	font-style: italic;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Trend Sparkline (F10)                                              */
+/* ------------------------------------------------------------------ */
+
+.scrutinizer-sparkline-row {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	margin: 12px 0 16px;
+	padding: 12px 16px;
+	background: #f6f7f7;
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
+}
+
+.scrutinizer-sparkline-chart {
+	flex-shrink: 0;
+}
+
+.scrutinizer-sparkline-chart svg {
+	display: block;
+}
+
+.scrutinizer-sparkline-stats {
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+	font-size: 13px;
+	color: #1d2327;
+}
+
+.sparkline-stat {
+	font-variant-numeric: tabular-nums;
+	font-weight: 600;
+}
+
+.sparkline-stat-label {
+	display: block;
+	font-size: 10px;
+	font-weight: 400;
+	color: #787c82;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.sparkline-stat.trend-faster {
+	color: #00a32a;
+}
+
+.sparkline-stat.trend-slower {
+	color: #d63638;
+}
+
+.sparkline-stat.trend-stable {
+	color: #50575e;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Contextual Help Terms (D32)                                        */
 /* ------------------------------------------------------------------ */
