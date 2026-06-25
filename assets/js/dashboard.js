@@ -13,6 +13,7 @@
 	'use strict';
 
 	var pollingTimer  = null;
+	var fetchingGrouped = false;  // Guard against piling up grouped requests.
 	var currentView   = 'grouped'; // 'grouped', 'route', 'detail', 'history', 'compare'
 	var currentRoute  = '';        // route_key for the active drill-down
 	var activeTopTab  = 'routes';  // 'routes', 'history', or 'cron'
@@ -989,7 +990,7 @@
 		if ( pollingTimer ) {
 			return;
 		}
-		pollingTimer = setInterval( fetchGrouped, 2000 );
+		pollingTimer = setInterval( fetchGrouped, 15000 );
 	}
 
 	function stopPolling() {
@@ -1022,6 +1023,10 @@
 	/* ------------------------------------------------------------------ */
 
 	function fetchGrouped() {
+		if ( fetchingGrouped ) {
+			return; // Don't pile up requests.
+		}
+		fetchingGrouped = true;
 		$.get( scrutinizerAdmin.ajaxUrl, {
 			action: 'scrutinizer_get_profiles_grouped',
 			nonce:  scrutinizerAdmin.nonce
@@ -1044,6 +1049,8 @@
 			$( '#scrutinizer-profile-list' ).html(
 				'<p class="scrutinizer-empty">' + msg + '</p>'
 			);
+		} ).always( function() {
+			fetchingGrouped = false;
 		} );
 	}
 

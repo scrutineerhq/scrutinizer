@@ -732,13 +732,11 @@ class Storage {
 				MAX(captured_at) AS last_captured,
 				MIN(captured_at) AS first_captured,
 				GROUP_CONCAT(DISTINCT profile_type) AS profile_types,
-				AVG(JSON_EXTRACT(profile_data, '$.summary.query_count')) AS avg_query_count,
 				SUM(CASE WHEN response_status >= 200 AND response_status < 300 THEN 1 ELSE 0 END) AS count_2xx,
 				SUM(CASE WHEN response_status >= 300 AND response_status < 400 THEN 1 ELSE 0 END) AS count_3xx,
 				SUM(CASE WHEN response_status >= 400 AND response_status < 500 THEN 1 ELSE 0 END) AS count_4xx,
 				SUM(CASE WHEN response_status >= 500 THEN 1 ELSE 0 END) AS count_5xx,
-				COUNT(*) AS count_total,
-				MAX(JSON_UNQUOTE(JSON_EXTRACT(profile_data, '$.request.label'))) AS route_label
+				COUNT(*) AS count_total
 			FROM {$table}
 			WHERE {$where_sql}
 			GROUP BY route_key, route_class, request_method
