@@ -667,7 +667,7 @@ class Profiler {
 			'include',
 			'include_once',
 		);
-		$skip_classes = array( 'WP_Hook', 'WP_Http', 'WP_Http_Curl', 'WP_Http_Streams', 'Requests', 'WpOrg\\Requests\\Requests' );
+		$skip_classes   = array( 'WP_Hook', 'WP_Http', 'WP_Http_Curl', 'WP_Http_Streams', 'Requests', 'WpOrg\\Requests\\Requests' );
 
 		foreach ( $trace as $frame ) {
 			$file    = isset( $frame['file'] ) ? $frame['file'] : '';
