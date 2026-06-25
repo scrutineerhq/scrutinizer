@@ -659,10 +659,17 @@ class Profiler {
 			$fn_name = isset( $frame['function'] ) ? $frame['function'] : '';
 			$class   = isset( $frame['class'] ) ? $frame['class'] : '';
 
-			// Skip profiler frames by file.
+			// Skip profiler frames by file or namespace.
 			if ( false !== strpos( $file, 'Profiler.php' )
 				|| false !== strpos( $file, 'Instrumentor.php' )
 			) {
+				continue;
+			}
+			if ( 0 === strpos( $class, 'Scrutinizer\\' ) ) {
+				continue;
+			}
+			// Skip instrumented closures (Instrumentor wrappers).
+			if ( '{closure}' === $fn_name && false !== strpos( $file, 'Instrumentor.php' ) ) {
 				continue;
 			}
 
