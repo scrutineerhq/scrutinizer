@@ -1138,7 +1138,7 @@
 		// Pin/annotate toolbar.
 		html += '<div class="scrutinizer-pin-toolbar">';
 		html += '<button type="button" class="button ' + ( isPinned ? 'button-primary' : '' ) + '" id="scrutinizer-pin-toggle" data-pinned="' + ( isPinned ? '1' : '' ) + '">';
-		html += isPinned ? '<span class="dashicons dashicons-admin-post"></span> ' + esc( scrutinizerAdmin.i18n.unpin || 'Unpin' ) : '<span class="dashicons dashicons-admin-post"></span> ' + esc( scrutinizerAdmin.i18n.pin || 'Pin' );
+		html += isPinned ? '<span class="dashicons dashicons-sticky"></span> ' + esc( scrutinizerAdmin.i18n.unpin || 'Unpin' ) : '<span class="dashicons dashicons-sticky"></span> ' + esc( scrutinizerAdmin.i18n.pin || 'Pin' );
 		html += '</button>';
 		html += '<label class="scrutinizer-pin-field"><span>' + esc( scrutinizerAdmin.i18n.note || 'Note' ) + ':</span>';
 		html += '<input type="text" id="scrutinizer-note-input" value="' + esc( profileNote ) + '" placeholder="Why did you take this measurement?" /></label>';
@@ -2433,7 +2433,7 @@
 				$( '#scrutinizer-pin-toggle' )
 					.addClass( 'button-primary' )
 					.data( 'pinned', '1' )
-					.html( '<span class="dashicons dashicons-admin-post"></span> ' + esc( scrutinizerAdmin.i18n.unpin || 'Unpin' ) );
+					.html( '<span class="dashicons dashicons-sticky"></span> ' + esc( scrutinizerAdmin.i18n.unpin || 'Unpin' ) );
 				showNotice( response.data.message, 'success' );
 			}
 		} );
@@ -2449,7 +2449,7 @@
 				$( '#scrutinizer-pin-toggle' )
 					.removeClass( 'button-primary' )
 					.data( 'pinned', '' )
-					.html( '<span class="dashicons dashicons-admin-post"></span> ' + esc( scrutinizerAdmin.i18n.pin || 'Pin' ) );
+					.html( '<span class="dashicons dashicons-sticky"></span> ' + esc( scrutinizerAdmin.i18n.pin || 'Pin' ) );
 				showNotice( response.data.message, 'success' );
 			}
 		} );
@@ -2524,7 +2524,7 @@
 		// Pinned only.
 		html += '<label class="scrutinizer-history-check-label">';
 		html += '<input type="checkbox" id="scrutinizer-history-pinned" /> ';
-		html += '<span class="dashicons dashicons-admin-post"></span> ' + esc( scrutinizerAdmin.i18n.pinned || 'Pinned' );
+		html += '<span class="dashicons dashicons-sticky"></span> ' + esc( scrutinizerAdmin.i18n.pinned || 'Pinned' );
 		html += '</label>';
 
 		// Date range.
@@ -2535,7 +2535,7 @@
 		// Bulk action bar (hidden until selections made).
 		html += '<div class="scrutinizer-bulk-bar" id="scrutinizer-bulk-bar" style="display:none">';
 		html += '<span id="scrutinizer-bulk-count">0 selected</span>';
-		html += '<button type="button" class="button" id="scrutinizer-bulk-pin" title="Pin selected profiles"><span class="dashicons dashicons-admin-post"></span> Pin</button>';
+		html += '<button type="button" class="button" id="scrutinizer-bulk-pin" title="Pin selected profiles"><span class="dashicons dashicons-sticky"></span> Pin</button>';
 		html += '<button type="button" class="button" id="scrutinizer-bulk-unpin" title="Unpin selected profiles">Unpin</button>';
 		html += '<button type="button" class="button" id="scrutinizer-bulk-delete" title="Delete selected profiles">🗑 Delete</button>';
 		html += '<button type="button" class="button" id="scrutinizer-compare-btn" style="display:none">' + esc( scrutinizerAdmin.i18n.compareSelected || 'Compare Selected' ) + '</button>';
@@ -2595,7 +2595,7 @@
 		html += '<th>Captured</th>';
 		html += '<th>Route</th>';
 		html += '<th class="numeric">Duration</th>';
-		html += '<th><span class="dashicons dashicons-admin-post" title="Pinned"></span></th>';
+		html += '<th><span class="dashicons dashicons-sticky" title="Pinned"></span></th>';
 		html += '<th>Note</th>';
 		html += '<th>Tags</th>';
 		html += '<th>Actions</th>';
@@ -2604,7 +2604,7 @@
 		for ( var i = 0; i < profiles.length; i++ ) {
 			var p     = profiles[ i ];
 			var durMs = ( parseInt( p.duration_ns, 10 ) / 1e6 ).toFixed( 1 );
-			var pinIcon = parseInt( p.is_pinned, 10 ) === 1 ? '<span class="dashicons dashicons-admin-post"></span>' : '';
+			var pinIcon = parseInt( p.is_pinned, 10 ) === 1 ? '<span class="dashicons dashicons-sticky"></span>' : '';
 			var notePrev = truncate( p.note || '', 40 );
 			var tagPills = renderTagPills( p.tags || '' );
 			var checked  = compareChecked[ p.id ] ? ' checked' : '';
