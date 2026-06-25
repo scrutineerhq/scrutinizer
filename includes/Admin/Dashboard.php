@@ -166,7 +166,6 @@ class Dashboard {
 				</div>
 			</div>
 
-			<!-- Results (data-first — above-fold for return visitors) -->
 			<!-- Home View (landing screen) -->
 			<div class="scrutinizer-home" id="scrutinizer-home">
 				<div class="scrutinizer-home-cards">
@@ -186,9 +185,31 @@ class Dashboard {
 						<span><?php echo esc_html__( 'Background measurement, sample rate, query profiling', 'scrutinizer' ); ?></span>
 					</button>
 				</div>
+				<div class="scrutinizer-home-faq">
+					<div class="scrutinizer-faq-item">
+						<strong><?php echo esc_html__( 'Will this slow down my site?', 'scrutinizer' ); ?></strong>
+						<p><?php echo esc_html__( 'Instrumentation adds 2–5 ms per request. Background measurement samples a fraction of traffic. Your visitors will not notice.', 'scrutinizer' ); ?></p>
+					</div>
+					<div class="scrutinizer-faq-item">
+						<strong><?php echo esc_html__( 'Does any data leave my server?', 'scrutinizer' ); ?></strong>
+						<p><?php echo esc_html__( 'No. All profiling data stays in your WordPress database. Sharing a report is optional and end-to-end encrypted — the relay server cannot read your data.', 'scrutinizer' ); ?></p>
+					</div>
+					<div class="scrutinizer-faq-item">
+						<strong><?php echo esc_html__( 'Who can see this?', 'scrutinizer' ); ?></strong>
+						<p><?php echo esc_html__( 'Only administrators. Scrutinizer is invisible to logged-out visitors and non-admin users.', 'scrutinizer' ); ?></p>
+					</div>
+					<div class="scrutinizer-faq-item">
+						<strong><?php echo esc_html__( 'Need help?', 'scrutinizer' ); ?></strong>
+						<p><?php
+							printf(
+								/* translators: %s: GitHub Issues URL */
+								esc_html__( 'File an issue at %s — bug reports, feature requests, and questions are all welcome.', 'scrutinizer' ),
+								'<a href="https://github.com/scrutineerhq/scrutinizer/issues" target="_blank" rel="noopener">GitHub Issues</a>'
+							);
+						?></p>
+					</div>
+				</div>
 			</div>
-
-			<!-- Capture Flow (guided profiling) -->
 			<div class="scrutinizer-capture-flow" id="scrutinizer-capture-flow" style="display:none;">
 				<button type="button" class="button button-link" id="scrutinizer-capture-back">
 					<?php echo esc_html__( '← Back', 'scrutinizer' ); ?>

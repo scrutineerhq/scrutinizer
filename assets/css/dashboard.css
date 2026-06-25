@@ -13,7 +13,7 @@
 	background: #fff;
 	border: 1px solid #c3c4c7;
 	border-left: 4px solid #c3c4c7;
-	padding: 16px 20px;
+	padding: 24px 28px;
 	margin: 20px 0;
 }
 
@@ -103,6 +103,71 @@
 	font-size: 12px;
 	color: #50575e;
 	line-height: 1.4;
+}
+
+/* ----- Home FAQ ----- */
+
+.scrutinizer-home-faq {
+	margin-top: 28px;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px 24px;
+}
+
+.scrutinizer-faq-item {
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.scrutinizer-faq-item strong {
+	display: block;
+	margin-bottom: 4px;
+	color: #1d2327;
+}
+
+.scrutinizer-faq-item p {
+	margin: 0;
+	color: #50575e;
+}
+
+.scrutinizer-faq-item a {
+	color: #2271b1;
+	text-decoration: none;
+}
+
+.scrutinizer-faq-item a:hover {
+	text-decoration: underline;
+}
+
+/* ----- Back navigation buttons ----- */
+
+#scrutinizer-back-to-list,
+#scrutinizer-back-to-route,
+#scrutinizer-back-to-history,
+#scrutinizer-capture-back {
+	color: #2271b1;
+	font-size: 13px;
+	font-weight: 400;
+	padding: 4px 0;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+#scrutinizer-back-to-list:hover,
+#scrutinizer-back-to-route:hover,
+#scrutinizer-back-to-history:hover,
+#scrutinizer-capture-back:hover {
+	color: #135e96;
+}
+
+#scrutinizer-back-to-list:focus,
+#scrutinizer-back-to-route:focus,
+#scrutinizer-back-to-history:focus,
+#scrutinizer-capture-back:focus {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+	border-radius: 2px;
+	box-shadow: none;
 }
 
 /* ----- Capture Flow ----- */
@@ -200,11 +265,24 @@
 
 /* Visitor incognito guidance */
 .scrutinizer-visitor-guidance {
-	padding: 16px 20px;
+	margin-top: 20px;
+	padding: 20px 24px;
 	border: 1px solid #c3c4c7;
 	border-left: 4px solid #dba617;
 	background: #fcf9e8;
 	border-radius: 0 4px 4px 0;
+}
+
+.scrutinizer-visitor-copied {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+	color: #00a32a;
+}
+
+.scrutinizer-visitor-copied .dashicons {
+	color: #00a32a;
 }
 
 .scrutinizer-visitor-guidance h3 {
@@ -220,8 +298,9 @@
 }
 
 .scrutinizer-visitor-guidance p {
-	margin: 0 0 8px;
+	margin: 0 0 12px;
 	font-size: 13px;
+	line-height: 1.6;
 }
 
 .scrutinizer-visitor-guidance .scrutinizer-url-box {
@@ -2810,7 +2889,7 @@
 }
 
 .scrutinizer-modal-body {
-	padding: 20px 24px;
+	padding: 28px 28px 32px;
 }
 
 /* Section spacing inside settings modal */
@@ -2818,8 +2897,9 @@
 #scrutinizer-settings-panel > .scrutinizer-controls,
 #scrutinizer-settings-panel > .scrutinizer-bg-controls,
 #scrutinizer-settings-panel > .scrutinizer-qp-controls {
-	margin-top: 24px;
+	margin-top: 20px;
 	margin-bottom: 0;
+	padding: 24px 28px;
 }
 
 #scrutinizer-settings-panel > .scrutinizer-status-card:first-child {
@@ -2829,7 +2909,6 @@
 #scrutinizer-settings-panel > .scrutinizer-controls {
 	border: 1px solid #c3c4c7;
 	border-left: 4px solid var(--wp-admin-theme-color, #2271b1);
-	padding: 20px 24px;
 	background: #fff;
 }
 
@@ -2837,7 +2916,6 @@
 #scrutinizer-settings-panel > .scrutinizer-qp-controls {
 	border: 1px solid #c3c4c7;
 	border-left: 4px solid var(--wp-admin-theme-color, #2271b1);
-	padding: 20px 24px;
 }
 
 #scrutinizer-settings-panel {
@@ -2851,11 +2929,12 @@
 	margin-top: 0;
 	margin-bottom: 16px;
 	font-size: 14px;
+	font-weight: 600;
 }
 
 #scrutinizer-settings-panel h3:not(:first-child) {
-	margin-top: 20px;
-	padding-top: 16px;
+	margin-top: 24px;
+	padding-top: 20px;
 	border-top: 1px solid #f0f0f1;
 }
 
