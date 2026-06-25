@@ -626,6 +626,25 @@ class Profiler {
 		$caller_parts = array();
 		$source_file  = '';
 
+		// Pre-scan: find the first file belonging to a plugin/theme/mu-plugin for attribution.
+		// This runs before the skip logic so we don't lose the file from skipped frames.
+		foreach ( $trace as $frame ) {
+			$f = isset( $frame['file'] ) ? $frame['file'] : '';
+			if ( '' === $f
+				|| false !== strpos( $f, 'Profiler.php' )
+				|| false !== strpos( $f, 'Instrumentor.php' )
+				|| false !== strpos( $f, 'class-wp-hook.php' )
+				|| false !== strpos( $f, 'class-http.php' )
+				|| false !== strpos( $f, 'class-wp-http' )
+				|| false !== strpos( $f, 'plugin.php' )
+				|| false !== strpos( $f, 'http.php' )
+			) {
+				continue;
+			}
+			$source_file = $f;
+			break;
+		}
+
 		// Function/class names to skip (WP hook dispatch + HTTP internals + PHP glue).
 		$skip_functions = array(
 			'apply_filters',
@@ -699,11 +718,6 @@ class Profiler {
 
 			if ( $fn && count( $caller_parts ) < 3 ) {
 				$caller_parts[] = $fn;
-			}
-
-			// Use the first non-internal file for attribution.
-			if ( empty( $source_file ) && '' !== $file ) {
-				$source_file = $file;
 			}
 		}
 
