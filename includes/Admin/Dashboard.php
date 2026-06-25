@@ -207,7 +207,7 @@ class Dashboard {
 								esc_html__( 'File an issue at %s — bug reports, feature requests, and questions are all welcome.', 'scrutinizer' ),
 								'<a href="https://github.com/scrutineerhq/scrutinizer/issues" target="_blank" rel="noopener">GitHub Issues</a>'
 							);
-						?>
+							?>
 						</p>
 					</div>
 				</div>
