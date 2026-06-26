@@ -2871,31 +2871,27 @@
 	margin-top: -2px;
 }
 
-.scrutinizer-revoke-link {
+.scrutinizer-btn-danger {
 	color: #d63638 !important;
-	text-decoration: none !important;
-	display: inline-flex !important;
-	align-items: center;
-	gap: 4px;
-	font-size: 13px;
-	padding: 4px 8px !important;
-	line-height: 1;
-	min-height: 0 !important;
-	border: none !important;
-	background: none !important;
+	border-color: #d63638 !important;
+	background: #fff !important;
 	box-shadow: none !important;
 }
 
-.scrutinizer-revoke-link:hover {
-	color: #a02224 !important;
+.scrutinizer-btn-danger:hover,
+.scrutinizer-btn-danger:focus {
+	color: #fff !important;
+	background: #d63638 !important;
+	border-color: #d63638 !important;
 }
 
-.scrutinizer-revoke-link .dashicons {
+.scrutinizer-btn-danger .dashicons {
 	font-size: 16px;
 	width: 16px;
 	height: 16px;
 	line-height: 1;
-	vertical-align: middle;
+	vertical-align: text-bottom;
+	margin-right: 2px;
 }
 
 /* Inline feedback for save/revoke (F11) */
