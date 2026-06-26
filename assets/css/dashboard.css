@@ -1938,6 +1938,17 @@
 	z-index: 2;
 }
 
+.memory-overlay-svg .memory-hit-area,
+.memory-overlay-svg .memory-line {
+	pointer-events: stroke;
+	cursor: help;
+}
+
+.memory-overlay-svg:hover .memory-line {
+	stroke: rgba(230, 126, 34, 1);
+	stroke-width: 2.5;
+}
+
 .memory-overlay-label {
 	position: absolute;
 	right: 4px;
