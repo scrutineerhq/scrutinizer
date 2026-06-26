@@ -2798,7 +2798,7 @@
 
 			html += '<tr class="scrutinizer-query-row' + rowClass + '" data-source="' + esc( srcName ) + '">';
 			html += '<td class="numeric">' + ( i + 1 ) + '</td>';
-			html += '<td>' + ( qSource || '<span class="scrutinizer-muted">\u2014</span>' ) + '</td>';
+			html += '<td>' + ( qSource || '<span class="scrutinizer-asset-source-pill" style="background:#50575e;color:#fff">Core</span>' ) + '</td>';
 
 			// Click-to-expand SQL.
 			html += '<td class="scrutinizer-sql-cell">';
