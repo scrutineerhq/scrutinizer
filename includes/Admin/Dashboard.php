@@ -97,7 +97,7 @@ class Dashboard {
 				'backgroundEnabled'    => (bool) get_option( 'scrutinizer_background_profiling', false ),
 				'backgroundSampleRate' => (float) get_option( 'scrutinizer_sample_rate', 10 ),
 				'onlySuccessful'       => (bool) get_option( 'scrutinizer_only_successful', false ),
-				'retentionDays'        => (int) get_option( 'scrutinizer_retention_days', 30 ),
+				'retentionDays'        => (int) get_option( 'scrutinizer_retention_days', 7 ),
 				'maxPerRoute'          => (int) get_option( 'scrutinizer_max_per_route', 100 ),
 				'apiBase'              => rest_url( 'scrutinizer/v1/' ),
 				'restNonce'            => wp_create_nonce( 'wp_rest' ),

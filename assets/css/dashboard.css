@@ -3430,3 +3430,75 @@ details.scrutinizer-term > .scrutinizer-term-explain {
 	opacity: 0.5;
 }
 
+
+/* ------------------------------------------------------------------ */
+/*  TTL badges in History tab                                          */
+/* ------------------------------------------------------------------ */
+
+.scrutinizer-ttl-badge {
+	display: inline-block;
+	font-size: 11px;
+	line-height: 1;
+	padding: 2px 6px;
+	border-radius: 3px;
+	background: #f0f0f1;
+	color: #646970;
+	margin-left: 6px;
+	vertical-align: middle;
+}
+
+.scrutinizer-ttl-badge.scrutinizer-ttl-soon {
+	background: #fcf0e3;
+	color: #996800;
+}
+
+.scrutinizer-ttl-badge.scrutinizer-ttl-expired {
+	background: #fcf0f1;
+	color: #d63638;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shared Reports table                                               */
+/* ------------------------------------------------------------------ */
+
+.scrutinizer-shared-table .scrutinizer-route-cell {
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.scrutinizer-shared-table .button-small {
+	font-size: 12px;
+	line-height: 1.6;
+	padding: 2px 8px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Retention controls in Settings modal                               */
+/* ------------------------------------------------------------------ */
+
+.scrutinizer-retention-controls {
+	margin-top: 20px;
+	padding-top: 16px;
+	border-top: 1px solid #f0f0f1;
+}
+
+.scrutinizer-retention-controls h3 {
+	margin: 0 0 6px;
+}
+
+.scrutinizer-retention-controls .description {
+	margin: 0 0 12px;
+	color: #646970;
+}
+
+.scrutinizer-retention-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.scrutinizer-retention-row select {
+	min-width: 140px;
+}
