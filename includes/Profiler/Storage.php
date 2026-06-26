@@ -489,12 +489,25 @@ class Storage {
 		if ( $retention_days > 0 ) {
 			$cutoff_date = gmdate( 'Y-m-d H:i:s', time() - ( $retention_days * DAY_IN_SECONDS ) );
 
+			// Exempt shared profiles — their data is referenced by relay links.
+			$shared_reports = get_option( 'scrutinizer_shared_reports', array() );
+			$shared_ids     = array_filter( array_map( function ( $r ) {
+				return isset( $r['profile_id'] ) ? (int) $r['profile_id'] : 0;
+			}, $shared_reports ) );
+
+			$exclude_sql = '';
+			if ( ! empty( $shared_ids ) ) {
+				$placeholders = implode( ',', array_fill( 0, count( $shared_ids ), '%d' ) );
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				$exclude_sql = $wpdb->prepare( " AND id NOT IN ({$placeholders})", $shared_ids );
+			}
+
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$expired = (int) $wpdb->query(
 				$wpdb->prepare(
 					"DELETE FROM {$table} WHERE is_pinned = 0 AND captured_at < %s",
 					$cutoff_date
-				)
+				) . $exclude_sql
 			);
 			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		}

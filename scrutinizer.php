@@ -207,7 +207,7 @@ add_action( 'plugins_loaded', 'scrutinizer_admin_init' );
  * Uses configurable retention options. Pinned profiles are always kept.
  */
 function scrutinizer_run_cleanup() {
-	$retention_days = (int) get_option( 'scrutinizer_retention_days', 30 );
+	$retention_days = (int) get_option( 'scrutinizer_retention_days', 7 );
 	$max_per_route  = (int) get_option( 'scrutinizer_max_per_route', 100 );
 
 	\Scrutinizer\Profiler\Storage::cleanup_profiles( $retention_days, $max_per_route );

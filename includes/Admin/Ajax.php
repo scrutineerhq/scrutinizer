@@ -46,6 +46,10 @@ class Ajax {
 		add_action( 'wp_ajax_scrutinizer_clear_api_log', array( __CLASS__, 'clear_api_log' ) );
 		add_action( 'wp_ajax_scrutinizer_get_profile_trace', array( __CLASS__, 'get_profile_trace' ) );
 		add_action( 'wp_ajax_scrutinizer_get_profile_timeline', array( __CLASS__, 'get_profile_timeline' ) );
+		add_action( 'wp_ajax_scrutinizer_save_share', array( __CLASS__, 'save_share' ) );
+		add_action( 'wp_ajax_scrutinizer_get_shares', array( __CLASS__, 'get_shares' ) );
+		add_action( 'wp_ajax_scrutinizer_delete_share', array( __CLASS__, 'delete_share' ) );
+		add_action( 'wp_ajax_scrutinizer_save_retention', array( __CLASS__, 'save_retention' ) );
 	}
 
 	/**
@@ -1034,5 +1038,176 @@ class Ajax {
 		\Scrutinizer\Api\RestApi::clear_access_log();
 
 		wp_send_json_success();
+	}
+
+	/**
+	 * AJAX: Save a shared report record to the ledger.
+	 *
+	 * Called after a successful relay upload. Stores the share metadata
+	 * so the user can manage shared reports from the API tab.
+	 */
+	public static function save_share() {
+		check_ajax_referer( 'scrutinizer_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Permission denied.', 'scrutinizer' ) ),
+				403
+			);
+		}
+
+		$share_id = '';
+		if ( isset( $_POST['share_id'] ) ) {
+			$share_id = sanitize_text_field( wp_unslash( $_POST['share_id'] ) );
+		}
+		if ( empty( $share_id ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Missing share ID.', 'scrutinizer' ) ),
+				400
+			);
+		}
+
+		$record = array(
+			'id'           => $share_id,
+			'url'          => isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( $_POST['url'] ) ) : '',
+			'revoke_token' => isset( $_POST['revoke_token'] ) ? sanitize_text_field( wp_unslash( $_POST['revoke_token'] ) ) : '',
+			'expires_at'   => isset( $_POST['expires_at'] ) ? sanitize_text_field( wp_unslash( $_POST['expires_at'] ) ) : '',
+			'created_at'   => gmdate( 'Y-m-d H:i:s' ),
+			'profile_id'   => isset( $_POST['profile_id'] ) ? absint( $_POST['profile_id'] ) : 0,
+			'profile_route' => isset( $_POST['profile_route'] ) ? sanitize_text_field( wp_unslash( $_POST['profile_route'] ) ) : '',
+		);
+
+		$shares   = get_option( 'scrutinizer_shared_reports', array() );
+		$shares[] = $record;
+
+		// Cap at 100 entries to prevent option bloat.
+		if ( count( $shares ) > 100 ) {
+			$shares = array_slice( $shares, -100 );
+		}
+
+		update_option( 'scrutinizer_shared_reports', $shares, false );
+
+		wp_send_json_success( array( 'record' => $record ) );
+	}
+
+	/**
+	 * AJAX: Get all shared report records from the ledger.
+	 *
+	 * Auto-prunes expired shares before returning.
+	 */
+	public static function get_shares() {
+		check_ajax_referer( 'scrutinizer_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Permission denied.', 'scrutinizer' ) ),
+				403
+			);
+		}
+
+		$shares = get_option( 'scrutinizer_shared_reports', array() );
+
+		// Auto-prune expired shares.
+		$now     = time();
+		$pruned  = false;
+		$active  = array();
+		foreach ( $shares as $share ) {
+			if ( ! empty( $share['expires_at'] ) ) {
+				$expiry = strtotime( $share['expires_at'] );
+				if ( false !== $expiry && $expiry < $now ) {
+					$pruned = true;
+					continue;
+				}
+			}
+			$active[] = $share;
+		}
+
+		if ( $pruned ) {
+			update_option( 'scrutinizer_shared_reports', $active, false );
+		}
+
+		wp_send_json_success( array( 'shares' => $active ) );
+	}
+
+	/**
+	 * AJAX: Remove a shared report from the ledger.
+	 *
+	 * The client handles the relay DELETE request (cross-origin fetch).
+	 * This handler only cleans up the local ledger entry.
+	 */
+	public static function delete_share() {
+		check_ajax_referer( 'scrutinizer_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Permission denied.', 'scrutinizer' ) ),
+				403
+			);
+		}
+
+		$share_id = '';
+		if ( isset( $_POST['share_id'] ) ) {
+			$share_id = sanitize_text_field( wp_unslash( $_POST['share_id'] ) );
+		}
+
+		if ( empty( $share_id ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Missing share ID.', 'scrutinizer' ) ),
+				400
+			);
+		}
+
+		$shares = get_option( 'scrutinizer_shared_reports', array() );
+		$shares = array_values(
+			array_filter(
+				$shares,
+				function ( $s ) use ( $share_id ) {
+					return $s['id'] !== $share_id;
+				}
+			)
+		);
+
+		update_option( 'scrutinizer_shared_reports', $shares, false );
+
+		wp_send_json_success(
+			array( 'message' => __( 'Share record removed.', 'scrutinizer' ) )
+		);
+	}
+
+	/**
+	 * AJAX: Save the profile retention days setting.
+	 */
+	public static function save_retention() {
+		check_ajax_referer( 'scrutinizer_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Permission denied.', 'scrutinizer' ) ),
+				403
+			);
+		}
+
+		$days = isset( $_POST['retention_days'] ) ? absint( $_POST['retention_days'] ) : 7;
+
+		// Validate: must be one of the allowed values.
+		$allowed = array( 0, 7, 14, 30 );
+		if ( ! in_array( $days, $allowed, true ) ) {
+			$days = 7;
+		}
+
+		update_option( 'scrutinizer_retention_days', $days, true );
+
+		wp_send_json_success(
+			array(
+				'retention_days' => $days,
+				'message'        => 0 === $days
+					? __( 'Profile retention disabled — profiles kept indefinitely.', 'scrutinizer' )
+					: sprintf(
+						/* translators: %d: number of days */
+						__( 'Profiles will auto-expire after %d days.', 'scrutinizer' ),
+						$days
+					),
+			)
+		);
 	}
 }

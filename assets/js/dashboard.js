@@ -175,6 +175,7 @@
 
 		initBackgroundControls();
 		initQueryProfilingControls();
+		initRetentionControls();
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -1023,6 +1024,56 @@
 			if ( response.success ) {
 				showNotice( response.data.message, 'success' );
 			}
+		} );
+	}
+
+	/* ------------------------------------------------------------------ */
+	/*  Retention / TTL controls                                           */
+	/* ------------------------------------------------------------------ */
+
+	function initRetentionControls() {
+		var current = parseInt( scrutinizerAdmin.retentionDays, 10 ) || 7;
+		var options = [
+			{ value: 7, label: '7 days' },
+			{ value: 14, label: '14 days' },
+			{ value: 30, label: '30 days' },
+			{ value: 0, label: 'Never (keep all)' }
+		];
+
+		var html = '<div class="scrutinizer-retention-controls">';
+		html += '<h3>Profile Retention</h3>';
+		html += '<p class="description">Unpinned profiles older than this are automatically deleted. Pinned and shared profiles are kept regardless.</p>';
+		html += '<div class="scrutinizer-retention-row">';
+		html += '<label>Auto-expire after </label>';
+		html += '<select id="scrutinizer-retention-select">';
+		for ( var i = 0; i < options.length; i++ ) {
+			var opt = options[ i ];
+			var selected = ( opt.value === current ) ? ' selected' : '';
+			html += '<option value="' + opt.value + '"' + selected + '>' + esc( opt.label ) + '</option>';
+		}
+		html += '</select>';
+		html += '<span id="scrutinizer-retention-saved" class="scrutinizer-saved-notice" style="display:none;">\u2713 Saved</span>';
+		html += '</div>';
+		html += '</div>';
+
+		$( '.scrutinizer-qp-controls' ).after( html );
+
+		$( '#scrutinizer-retention-select' ).on( 'change', function() {
+			var days = parseInt( $( this ).val(), 10 );
+			$.post( scrutinizerAdmin.ajaxUrl, {
+				action:         'scrutinizer_save_retention',
+				nonce:          scrutinizerAdmin.nonce,
+				retention_days: days
+			}, function( response ) {
+				if ( response.success ) {
+					scrutinizerAdmin.retentionDays = response.data.retention_days;
+					var $saved = $( '#scrutinizer-retention-saved' );
+					$saved.show();
+					setTimeout( function() {
+						$saved.fadeOut( 300 );
+					}, 2000 );
+				}
+			} );
 		} );
 	}
 
@@ -3947,9 +3998,31 @@
 			var tagPills = renderTagPills( p.tags || '' );
 			var checked  = compareChecked[ p.id ] ? ' checked' : '';
 
+			// TTL badge for unpinned profiles.
+			var ttlBadge = '';
+			var retDays  = parseInt( scrutinizerAdmin.retentionDays, 10 ) || 0;
+			if ( retDays > 0 && parseInt( p.is_pinned, 10 ) !== 1 && p.captured_at ) {
+				var capturedMs = new Date( p.captured_at + ' UTC' ).getTime();
+				var expiresMs  = capturedMs + ( retDays * 86400000 );
+				var remainMs   = expiresMs - Date.now();
+				if ( remainMs <= 0 ) {
+					ttlBadge = ' <span class="scrutinizer-ttl-badge scrutinizer-ttl-expired">expired</span>';
+				} else {
+					var remDays = Math.ceil( remainMs / 86400000 );
+					if ( remDays <= 1 ) {
+						var remHours = Math.ceil( remainMs / 3600000 );
+						ttlBadge = ' <span class="scrutinizer-ttl-badge scrutinizer-ttl-soon">' + remHours + 'h</span>';
+					} else if ( remDays <= 3 ) {
+						ttlBadge = ' <span class="scrutinizer-ttl-badge scrutinizer-ttl-soon">' + remDays + 'd</span>';
+					} else {
+						ttlBadge = ' <span class="scrutinizer-ttl-badge">' + remDays + 'd</span>';
+					}
+				}
+			}
+
 			html += '<tr>';
 			html += '<td><input type="checkbox" class="scrutinizer-compare-check" data-profile-id="' + parseInt( p.id, 10 ) + '"' + checked + ' /></td>';
-			html += '<td>' + esc( p.captured_at ) + '</td>';
+			html += '<td>' + esc( p.captured_at ) + ttlBadge + '</td>';
 			html += '<td class="scrutinizer-route-cell" title="' + esc( p.route_key ) + '">' + esc( truncate( p.route_key || '', 40 ) ) + '</td>';
 			html += '<td class="scrutinizer-duration numeric">' + esc( durMs ) + ' ms</td>';
 			html += '<td>' + pinIcon + '</td>';
@@ -4838,12 +4911,12 @@
 		}
 		html += '</div>';
 
-		// --- Send to Support section ---
+		// --- Shared Reports section ---
 		html += '<div class="scrutinizer-api-section">';
-		html += '<h3 class="scrutinizer-api-heading"><span class="dashicons dashicons-lock"></span> Send to Support</h3>';
-		html += '<p class="scrutinizer-api-desc">Share a performance report with your support team or plugin developer via an encrypted, self-destructing link. ';
-		html += 'Data is encrypted in your browser before upload &mdash; the relay server never sees your report contents.</p>';
+		html += '<h3 class="scrutinizer-api-heading"><span class="dashicons dashicons-lock"></span> Shared Reports</h3>';
+		html += '<p class="scrutinizer-api-desc">Encrypted, self-destructing links you\u2019ve shared. Data is encrypted in your browser before upload &mdash; the relay server never sees your report contents.</p>';
 		html += '<p class="scrutinizer-api-desc">To share: open a profile from the <strong>History</strong> tab, then click <strong>Share</strong> in the toolbar.</p>';
+		html += '<div id="scrutinizer-shared-reports-content"><p class="scrutinizer-empty">Loading\u2026</p></div>';
 		html += '<p class="scrutinizer-api-desc" style="color:#50575e;font-size:12px;">Powered by <code>scrutinizer.dev</code> &mdash; zero-knowledge encrypted relay.</p>';
 		html += '</div>';
 
@@ -4862,7 +4935,8 @@
 
 		bindApiEvents( $container );
 
-		// Load audit log on render.
+		// Load shared reports and audit log on render.
+		loadSharedReports();
 		loadApiAuditLog();
 	}
 
@@ -4975,6 +5049,139 @@
 	/* ------------------------------------------------------------------ */
 	/*  API Audit Log (F17)                                                */
 	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Load and render shared reports from the ledger.
+	 */
+	function loadSharedReports() {
+		$.get( scrutinizerAdmin.ajaxUrl, {
+			action: 'scrutinizer_get_shares',
+			nonce:  scrutinizerAdmin.nonce
+		}, function( response ) {
+			if ( response.success ) {
+				renderSharedReports( response.data.shares || [] );
+			} else {
+				$( '#scrutinizer-shared-reports-content' ).html(
+					'<p class="scrutinizer-empty">Failed to load shared reports.</p>'
+				);
+			}
+		} );
+	}
+
+	function renderSharedReports( shares ) {
+		var $container = $( '#scrutinizer-shared-reports-content' );
+
+		if ( ! shares.length ) {
+			$container.html( '<p class="scrutinizer-empty">No shared reports yet. Share a profile to see it here.</p>' );
+			return;
+		}
+
+		var now = Date.now();
+		var html = '<table class="scrutinizer-profile-table scrutinizer-shared-table widefat">';
+		html += '<thead><tr><th>Route</th><th>Shared</th><th>Expires</th><th>Actions</th></tr></thead>';
+		html += '<tbody>';
+
+		for ( var i = 0; i < shares.length; i++ ) {
+			var s = shares[ i ];
+			var route = s.profile_route || '\u2014';
+			var created = s.created_at || '';
+			var expiresAt = s.expires_at ? new Date( s.expires_at ) : null;
+			var expiryLabel = '';
+
+			if ( expiresAt ) {
+				var diff = expiresAt.getTime() - now;
+				if ( diff <= 0 ) {
+					expiryLabel = '<span style="color:#d63638;">Expired</span>';
+				} else {
+					var days = Math.ceil( diff / 86400000 );
+					if ( days <= 1 ) {
+						var hours = Math.ceil( diff / 3600000 );
+						expiryLabel = '<span style="color:#dba617;">' + hours + 'h remaining</span>';
+					} else {
+						expiryLabel = days + 'd remaining';
+					}
+				}
+			} else {
+				expiryLabel = '\u2014';
+			}
+
+			var isExpired = expiresAt && expiresAt.getTime() <= now;
+
+			html += '<tr>';
+			html += '<td class="scrutinizer-route-cell" title="' + esc( route ) + '">' + esc( truncate( route, 40 ) ) + '</td>';
+			html += '<td>' + esc( created ) + '</td>';
+			html += '<td>' + expiryLabel + '</td>';
+			html += '<td class="scrutinizer-actions">';
+			if ( ! isExpired ) {
+				html += '<button type="button" class="button button-small scrutinizer-copy-share-link" data-url="' + esc( s.url || '' ) + '">Copy Link</button> ';
+				html += '<button type="button" class="button button-small scrutinizer-btn-danger scrutinizer-revoke-share" data-id="' + esc( s.id ) + '" data-token="' + esc( s.revoke_token || '' ) + '">Revoke</button>';
+			} else {
+				html += '<button type="button" class="button button-small scrutinizer-remove-share" data-id="' + esc( s.id ) + '">Remove</button>';
+			}
+			html += '</td>';
+			html += '</tr>';
+		}
+
+		html += '</tbody></table>';
+		$container.html( html );
+
+		// Bind copy-link buttons.
+		$container.find( '.scrutinizer-copy-share-link' ).on( 'click', function() {
+			var url = $( this ).data( 'url' );
+			var $btn = $( this );
+			copyToClipboard( url );
+			$btn.html( '\u2713 Copied' );
+			setTimeout( function() {
+				$btn.html( 'Copy Link' );
+			}, 2000 );
+		} );
+
+		// Bind revoke buttons.
+		$container.find( '.scrutinizer-revoke-share' ).on( 'click', function() {
+			var id = $( this ).data( 'id' );
+			var token = $( this ).data( 'token' );
+			var $btn = $( this );
+			$btn.prop( 'disabled', true ).text( 'Revoking\u2026' );
+
+			fetch( RELAY_URL + '/r/' + id, {
+				method: 'DELETE',
+				headers: { 'X-Revoke-Token': token }
+			} )
+			.then( function( resp ) { return resp.json(); } )
+			.then( function( data ) {
+				// Remove from ledger regardless — the relay may have already expired it.
+				$.post( scrutinizerAdmin.ajaxUrl, {
+					action:   'scrutinizer_delete_share',
+					nonce:    scrutinizerAdmin.nonce,
+					share_id: id
+				}, function() {
+					loadSharedReports();
+				} );
+			} )
+			.catch( function() {
+				// Remove from ledger anyway on network error.
+				$.post( scrutinizerAdmin.ajaxUrl, {
+					action:   'scrutinizer_delete_share',
+					nonce:    scrutinizerAdmin.nonce,
+					share_id: id
+				}, function() {
+					loadSharedReports();
+				} );
+			} );
+		} );
+
+		// Bind remove buttons (for expired shares).
+		$container.find( '.scrutinizer-remove-share' ).on( 'click', function() {
+			var id = $( this ).data( 'id' );
+			$.post( scrutinizerAdmin.ajaxUrl, {
+				action:   'scrutinizer_delete_share',
+				nonce:    scrutinizerAdmin.nonce,
+				share_id: id
+			}, function() {
+				loadSharedReports();
+			} );
+		} );
+	}
 
 	function loadApiAuditLog() {
 		$.get( scrutinizerAdmin.ajaxUrl, {
@@ -5373,13 +5580,13 @@
 					}
 				} ).done( function( diag ) {
 					shareData.diagnostics = diag;
-					encryptAndUpload( shareData, ttlDays, burnAfterReading, passphrase );
+					encryptAndUpload( shareData, ttlDays, burnAfterReading, passphrase, profileId, profile.route_key || '' );
 				} ).fail( function() {
 					// Continue without diagnostics
-					encryptAndUpload( shareData, ttlDays, burnAfterReading, passphrase );
+					encryptAndUpload( shareData, ttlDays, burnAfterReading, passphrase, profileId, profile.route_key || '' );
 				} );
 			} else {
-				encryptAndUpload( shareData, ttlDays, burnAfterReading, passphrase );
+				encryptAndUpload( shareData, ttlDays, burnAfterReading, passphrase, profileId, profile.route_key || '' );
 			}
 
 		} ).fail( function() {
@@ -5391,7 +5598,7 @@
 	/**
 	 * Encrypt a report payload and upload to the relay.
 	 */
-	function encryptAndUpload( data, ttlDays, burnAfterReading, passphrase ) {
+	function encryptAndUpload( data, ttlDays, burnAfterReading, passphrase, profileId, profileRoute ) {
 		var $btn = $( '#scrutinizer-share-go' );
 		var $result = $( '#scrutinizer-share-result' );
 
@@ -5469,6 +5676,18 @@
 						var id = $( this ).data( 'id' );
 						var token = $( this ).data( 'token' );
 						revokeSharedReport( id, token );
+					} );
+
+					// Persist share record in the ledger.
+					$.post( scrutinizerAdmin.ajaxUrl, {
+						action:        'scrutinizer_save_share',
+						nonce:         scrutinizerAdmin.nonce,
+						share_id:      resp.id,
+						url:           shareUrl,
+						revoke_token:  resp.revoke_token,
+						expires_at:    resp.expires_at,
+						profile_id:    profileId,
+						profile_route: profileRoute
 					} );
 				} );
 		} )
@@ -5555,7 +5774,7 @@
 	 * Revoke a shared report via the relay.
 	 */
 	function revokeSharedReport( id, token ) {
-		var $btn = $( '#scrutinizer-share-revoke' );
+		var $btn = $( '#scrutinizer-share-revoke, .scrutinizer-revoke-share[data-id="' + id + '"]' );
 		$btn.prop( 'disabled', true );
 
 		fetch( RELAY_URL + '/r/' + id, {
@@ -5567,6 +5786,17 @@
 		} )
 		.then( function( data ) {
 			if ( data.success ) {
+				// Remove from local ledger.
+				$.post( scrutinizerAdmin.ajaxUrl, {
+					action:   'scrutinizer_delete_share',
+					nonce:    scrutinizerAdmin.nonce,
+					share_id: id
+				}, function() {
+					// Refresh shared reports section if visible.
+					if ( $( '#scrutinizer-shared-reports-content' ).length ) {
+						loadSharedReports();
+					}
+				} );
 				$( '#scrutinizer-share-result' ).html(
 					'<div class="scrutinizer-share-revoked"><span class="dashicons dashicons-yes-alt"></span> Report revoked. The link will no longer work.</div>'
 				);
