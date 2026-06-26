@@ -109,13 +109,58 @@ Sharing architecture redesigned June 23, 2026. Zero-knowledge relay pulled into 
 - [x] WP-CLI: `wp scrutinizer status` — profiler state summary
 - [x] WP-CLI: `wp scrutinizer mu-plugin` — install/remove/status early boot mu-plugin
 
+## M5.5 — Cron Profiling Integration
+
+Connect the cron inventory to actual profiler data. The profiler already captures cron-triggered requests via background profiling — surface that data in the cron view.
+
+- [ ] Per-hook cost column — cross-reference cron hooks with trace data from profiled cron requests, show exclusive time per hook
+- [ ] Click-through to performance history — cron hook row links to filtered profile list for that hook
+- [ ] Trend line per hook — sparkline showing cost over recent executions
+- [ ] Worst execution highlight — flag hooks whose cost has spiked
+
 ## M6 — Polish and wp.org Submission
 
+### Panel Review Findings (June 25, 2026)
+Code review: `workspace/your_files/scrutineer-panel-review-june25.md`
+Visual review: `workspace/your_files/scrutineer-visual-review-june25.md`
+
+#### Critical (blocks launch)
+- [ ] `uninstall.php` — clean up DB tables (profiles, api_log), options, cron events, app passwords, transients
+- [ ] Delete empty `includes/Share/` directory
+- [ ] Delete duplicate `includes/CLI/` (correct path is `includes/Cli/`)
+
+#### High — i18n (1.0 requirement, decided June 25)
+- [ ] Wrap all JS dashboard strings in `wp.i18n.__()`
+- [ ] Wrap remaining PHP strings in `__()` / `esc_html__()`
+- [ ] Generate `.pot` file
+- [ ] Set up `wp_set_script_translations()` loading
+- [ ] Create `languages/` directory with `.pot`
+
+#### High — a11y (functional bar for 1.0, full WCAG AA in 1.1)
+- [ ] Fix contrast on hint text, card subtitles, "Clear filters" link
+- [ ] Escape key closes settings modal
+- [ ] Keyboard reachability audit — nothing trapped or unreachable
+- [ ] (1.1) Full ARIA tab panel pattern with arrow key navigation
+- [ ] (1.1) Focus trap in settings modal
+- [ ] (1.1) Screen reader announcements for dynamic content
+
+#### High — code fixes
+- [ ] `handle_prompt` — replace raw `echo`/`exit` with proper WP REST response
+- [ ] API access log — move from `wp_options` to new `wp_scrutinizer_api_log` table
+- [ ] Relay viewer — add Content-Security-Policy header
+- [ ] Cron registration — avoid re-registering on every `plugins_loaded`
+
+#### Visual polish
+- [ ] Timeline milestone label clipping at edges
+- [ ] Tab active-state consistency (blue underline vs dark border)
+- [ ] Queries tab "—" source pill → meaningful label ("Core" or "Unattributed")
+- [ ] Borderline contrast fixes on secondary text elements
+
+#### Existing items
 - [ ] i18n .pot generation
 - [ ] wp.org plugin readme (readme.txt with screenshots, FAQ, changelog)
 - [ ] Screenshot preparation
 - [ ] Security audit — activation flow, cookie handling, CSRF, nonce validation
-- [ ] Schema cleanup — drop `is_baseline` and `baseline_name` columns
 - [ ] Hosted infrastructure — Workers, R2, D1, DO, KV, WAF at scrutineer.dev
 - [ ] wp.org submission
 
