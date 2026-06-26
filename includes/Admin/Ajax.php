@@ -1068,12 +1068,12 @@ class Ajax {
 		}
 
 		$record = array(
-			'id'           => $share_id,
-			'url'          => isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( $_POST['url'] ) ) : '',
-			'revoke_token' => isset( $_POST['revoke_token'] ) ? sanitize_text_field( wp_unslash( $_POST['revoke_token'] ) ) : '',
-			'expires_at'   => isset( $_POST['expires_at'] ) ? sanitize_text_field( wp_unslash( $_POST['expires_at'] ) ) : '',
-			'created_at'   => gmdate( 'Y-m-d H:i:s' ),
-			'profile_id'   => isset( $_POST['profile_id'] ) ? absint( $_POST['profile_id'] ) : 0,
+			'id'            => $share_id,
+			'url'           => isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( $_POST['url'] ) ) : '',
+			'revoke_token'  => isset( $_POST['revoke_token'] ) ? sanitize_text_field( wp_unslash( $_POST['revoke_token'] ) ) : '',
+			'expires_at'    => isset( $_POST['expires_at'] ) ? sanitize_text_field( wp_unslash( $_POST['expires_at'] ) ) : '',
+			'created_at'    => gmdate( 'Y-m-d H:i:s' ),
+			'profile_id'    => isset( $_POST['profile_id'] ) ? absint( $_POST['profile_id'] ) : 0,
 			'profile_route' => isset( $_POST['profile_route'] ) ? sanitize_text_field( wp_unslash( $_POST['profile_route'] ) ) : '',
 		);
 
@@ -1108,9 +1108,9 @@ class Ajax {
 		$shares = get_option( 'scrutinizer_shared_reports', array() );
 
 		// Auto-prune expired shares.
-		$now     = time();
-		$pruned  = false;
-		$active  = array();
+		$now    = time();
+		$pruned = false;
+		$active = array();
 		foreach ( $shares as $share ) {
 			if ( ! empty( $share['expires_at'] ) ) {
 				$expiry = strtotime( $share['expires_at'] );

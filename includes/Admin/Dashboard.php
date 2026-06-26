@@ -300,7 +300,11 @@ class Dashboard {
 				</div>
 
 				<!-- Controls -->
-				<div class="scrutinizer-controls" id="scrutinizer-controls"><?php if ( $is_active ) : ?><button type="button" class="button button-secondary button-large" id="scrutinizer-stop"><?php echo esc_html__( 'Stop Profiling', 'scrutinizer' ); ?></button><?php endif; ?></div>
+				<div class="scrutinizer-controls" id="scrutinizer-controls">
+					<?php if ( $is_active ) : ?>
+						<button type="button" class="button button-secondary button-large" id="scrutinizer-stop"><?php echo esc_html__( 'Stop Profiling', 'scrutinizer' ); ?></button>
+					<?php endif; ?>
+				</div>
 
 				<!-- Background Profiling + Query Profiling rendered by JS here -->
 					</div>
