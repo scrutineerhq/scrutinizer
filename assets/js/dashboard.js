@@ -1894,8 +1894,13 @@
 					pathD += ( mp === 0 ? 'M' : 'L' ) + sx.toFixed( 2 ) + ',' + sy.toFixed( 1 ) + ' ';
 				}
 				var memLabel = formatBytes( memMax ) + ' peak';
+				var memMinLabel = formatBytes( memMin );
+				var memTitle = 'Memory: ' + memMinLabel + ' \\u2192 ' + memLabel;
 				html += '<svg class="memory-overlay-svg" viewBox="0 0 100 100" preserveAspectRatio="none">';
-				html += '<path d="' + pathD + '" fill="none" stroke="rgba(230,126,34,0.7)" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+				html += '<title>' + esc( memTitle ) + '</title>';
+				// Wide invisible hit area for hover.
+				html += '<path d="' + pathD + '" fill="none" stroke="transparent" stroke-width="10" vector-effect="non-scaling-stroke" class="memory-hit-area"/>';
+				html += '<path d="' + pathD + '" fill="none" stroke="rgba(230,126,34,0.7)" stroke-width="2" vector-effect="non-scaling-stroke" class="memory-line"/>';
 				html += '</svg>';
 				html += '<span class="memory-overlay-label">' + esc( memLabel ) + '</span>';
 			}
@@ -1909,7 +1914,15 @@
 		for ( var k = 0; k <= tickCount; k++ ) {
 			var tickMs  = ( ( durationNs / 1e6 ) * k / tickCount ).toFixed( 0 );
 			var tickPct = ( k / tickCount ) * 100;
-			html += '<span class="axis-tick" style="left:' + tickPct + '%">' + tickMs + ' ms</span>';
+			var tickAlign = '';
+			if ( k === 0 ) {
+				tickAlign = ' style="left:0;transform:none;text-align:left"';
+			} else if ( k === tickCount ) {
+				tickAlign = ' style="left:100%;transform:translateX(-100%);text-align:right"';
+			} else {
+				tickAlign = ' style="left:' + tickPct + '%"';
+			}
+			html += '<span class="axis-tick"' + tickAlign + '>' + tickMs + ' ms</span>';
 		}
 		html += '</div>'; // timeline-axis
 
@@ -2368,7 +2381,15 @@
 			var tickMs  = ( durationMs * k / tickCount ).toFixed( 0 );
 			var tickPct = ( k / tickCount ) * 100;
 			// Counter-scale the text so it stays readable when parent is scaleX-ed.
-			tickHtml += '<span class="axis-tick" style="left:' + tickPct + '%;transform:translateX(-50%) scaleX(' + ( 1 / timelineZoom ) + ')">' + tickMs + ' ms</span>';
+			var tickTransform;
+			if ( k === 0 ) {
+				tickTransform = 'scaleX(' + ( 1 / timelineZoom ) + ')';
+			} else if ( k === tickCount ) {
+				tickTransform = 'translateX(-100%) scaleX(' + ( 1 / timelineZoom ) + ')';
+			} else {
+				tickTransform = 'translateX(-50%) scaleX(' + ( 1 / timelineZoom ) + ')';
+			}
+			tickHtml += '<span class="axis-tick" style="left:' + tickPct + '%;transform:' + tickTransform + '">' + tickMs + ' ms</span>';
 		}
 		$axis.html( tickHtml );
 	}
