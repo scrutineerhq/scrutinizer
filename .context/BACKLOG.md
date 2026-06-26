@@ -109,7 +109,24 @@ Sharing architecture redesigned June 23, 2026. Zero-knowledge relay pulled into 
 - [x] WP-CLI: `wp scrutinizer status` — profiler state summary
 - [x] WP-CLI: `wp scrutinizer mu-plugin` — install/remove/status early boot mu-plugin
 
-## M5.5 — Cron Profiling Integration
+## M5.5 — Data Lifecycle & Share Management
+
+### Shared Reports Manager
+- [ ] Shared reports ledger — track all shared reports (relay URL, expiry, creation date, source profile ID)
+- [ ] "My Shared Reports" view in the API tab — list active shares with status, expiry countdown, and link
+- [ ] Revoke/expire shared reports from the ledger (DELETE to relay)
+- [ ] Re-copy share link from the ledger (link persists after initial share)
+- [ ] Share button should not hide the link — ledger is the durable record
+
+### Profile TTL & Expiry
+- [ ] Default 7-day TTL on profiles — auto-prune expired profiles via WP-Cron
+- [ ] Pinned profiles exempt from TTL (pin = keep forever)
+- [ ] Shared profiles exempt from TTL (or extend to match share expiry)
+- [ ] TTL indicator in History tab — show time remaining, highlight expiring-soon (e.g. <24h)
+- [ ] Settings: configurable default TTL (7d/14d/30d/never)
+- [ ] Clear visual language: pin to keep, share to export, everything else expires
+
+## M5.6 — Cron Profiling Integration
 
 Connect the cron inventory to actual profiler data. The profiler already captures cron-triggered requests via background profiling — surface that data in the cron view.
 
