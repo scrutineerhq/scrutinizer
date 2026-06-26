@@ -5,6 +5,13 @@ All notable changes to Scrutinizer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-06-26
+
+### Improved
+
+- Early boot timer mu-plugin auto-installs on plugin activation — bootstrap timing works out of the box without a WP-CLI step.
+- Uninstall cleans up the mu-plugin along with all other plugin data.
+
 ## [1.0.1] - 2026-06-26
 
 ### Fixed
@@ -65,5 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WordPress native** — Standard admin card patterns, semantic borders, WP color palette. No dark custom themes.
 - **Privacy by design** — SQL queries sanitized with literal stripping. No telemetry. No external calls except opt-in encrypted sharing.
 
+[1.0.2]: https://github.com/scrutineerhq/scrutinizer/releases/tag/v1.0.2
 [1.0.1]: https://github.com/scrutineerhq/scrutinizer/releases/tag/v1.0.1
 [1.0.0]: https://github.com/scrutineerhq/scrutinizer/releases/tag/v1.0.0
