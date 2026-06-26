@@ -3581,7 +3581,7 @@ details.scrutinizer-term > .scrutinizer-term-explain {
 	border: 1px solid #8c8f94;
 	border-radius: 4px;
 	resize: vertical;
-	margin-bottom: 8px;
+	display: block;
 }
 
 .scrutinizer-exclude-textarea:focus {
