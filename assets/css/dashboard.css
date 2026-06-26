@@ -902,9 +902,153 @@
 /* ----- Queries Table ----- */
 
 .scrutinizer-queries-summary {
-	margin-bottom: 12px;
+	margin-bottom: 8px;
 	font-size: 13px;
 	color: #50575e;
+}
+
+.scrutinizer-duplicate-flag {
+	color: #d63638;
+	font-weight: 600;
+}
+
+.scrutinizer-queries-header {
+	margin-bottom: 16px;
+}
+
+.scrutinizer-queries-sources {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 12px;
+}
+
+.scrutinizer-query-source-pill {
+	display: inline-block;
+	padding: 3px 10px;
+	border: none;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	color: #fff;
+	cursor: pointer;
+	transition: opacity 0.15s;
+}
+
+.scrutinizer-query-source-pill:hover {
+	opacity: 0.8;
+}
+
+.scrutinizer-queries-toggle {
+	display: inline-flex;
+	border: 1px solid #c3c4c7;
+	border-radius: 3px;
+	overflow: hidden;
+}
+
+.scrutinizer-toggle-btn {
+	padding: 4px 14px;
+	border: none;
+	background: #f0f0f1;
+	font-size: 12px;
+	color: #50575e;
+	cursor: pointer;
+	transition: background 0.15s;
+}
+
+.scrutinizer-toggle-btn + .scrutinizer-toggle-btn {
+	border-left: 1px solid #c3c4c7;
+}
+
+.scrutinizer-toggle-btn.active {
+	background: #2271b1;
+	color: #fff;
+}
+
+.scrutinizer-query-filter-bar {
+	padding: 8px 12px;
+	margin-bottom: 12px;
+	background: #f0f6fc;
+	border: 1px solid #72aee6;
+	border-radius: 3px;
+	font-size: 13px;
+}
+
+.scrutinizer-clear-filter {
+	border: none;
+	background: none;
+	color: #d63638;
+	cursor: pointer;
+	font-size: 12px;
+	margin-left: 8px;
+}
+
+.scrutinizer-duplicate-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	background: #d63638;
+	color: #fff;
+	border-radius: 10px;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.scrutinizer-query-group-row {
+	cursor: pointer;
+}
+
+.scrutinizer-query-group-row:hover {
+	background: #f6f7f7;
+}
+
+.scrutinizer-group-detail {
+	background: #f9f9f9;
+}
+
+.scrutinizer-group-detail-table {
+	margin: 8px 0;
+	font-size: 12px;
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.scrutinizer-group-detail-table th,
+.scrutinizer-group-detail-table td {
+	padding: 4px 8px;
+	border-bottom: 1px solid #e0e0e0;
+	text-align: left;
+}
+
+.scrutinizer-group-detail-table th {
+	font-size: 11px;
+	color: #50575e;
+}
+
+.scrutinizer-sql-expandable {
+	cursor: pointer;
+}
+
+.scrutinizer-sql-expandable:hover {
+	color: #2271b1;
+}
+
+.scrutinizer-sql-full {
+	white-space: pre-wrap;
+	word-break: break-all;
+	font-size: 11px;
+	cursor: pointer;
+}
+
+.scrutinizer-warn-query {
+	background: #fcf9e8 !important;
+}
+
+.scrutinizer-warn-query td {
+	color: #8a6d0b;
+}
+
+.scrutinizer-query-filter-pill {
+	cursor: pointer;
 }
 
 .scrutinizer-queries-table .scrutinizer-sql-cell {

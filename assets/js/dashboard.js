@@ -211,6 +211,71 @@
 			$( this ).toggleClass( 'is-expanded' );
 		} );
 
+		// Query view toggle: Grouped / Individual.
+		$( document ).on( 'click', '.scrutinizer-toggle-btn', function() {
+			var view = $( this ).data( 'view' );
+			$( '.scrutinizer-toggle-btn' ).removeClass( 'active' );
+			$( this ).addClass( 'active' );
+			$( '.scrutinizer-queries-view' ).hide();
+			$( '#scrutinizer-queries-' + view ).show();
+		} );
+
+		// Click grouped row to expand duplicate detail.
+		$( document ).on( 'click', '.scrutinizer-query-group-row', function() {
+			var sql = $( this ).data( 'sql' );
+			$( this ).toggleClass( 'is-expanded' );
+			$( '.scrutinizer-group-detail' ).each( function() {
+				if ( $( this ).data( 'sql' ) === sql ) {
+					$( this ).toggle();
+				}
+			} );
+		} );
+
+		// Click-to-expand SQL.
+		$( document ).on( 'click', '.scrutinizer-sql-expandable', function( e ) {
+			e.stopPropagation();
+			var $full = $( this ).siblings( '.scrutinizer-sql-full' );
+			if ( $full.length ) {
+				$( this ).toggle();
+				$full.toggle();
+			}
+		} );
+		$( document ).on( 'click', '.scrutinizer-sql-full', function( e ) {
+			e.stopPropagation();
+			var $short = $( this ).siblings( '.scrutinizer-sql-expandable' );
+			$( this ).toggle();
+			$short.toggle();
+		} );
+
+		// Source pill filter in queries.
+		$( document ).on( 'click', '.scrutinizer-query-source-pill, .scrutinizer-query-filter-pill', function( e ) {
+			e.stopPropagation();
+			var src = $( this ).data( 'source' );
+			$( '.scrutinizer-query-filter-bar' ).show().find( '.scrutinizer-filter-source-name' ).text( src );
+			// Filter individual view rows.
+			$( '.scrutinizer-query-row' ).each( function() {
+				$( this ).toggle( $( this ).data( 'source' ) === src );
+			} );
+			// Filter grouped view rows.
+			$( '.scrutinizer-query-group-row' ).each( function() {
+				var $pills = $( this ).find( '.scrutinizer-asset-source-pill' );
+				var match = false;
+				$pills.each( function() {
+					if ( $( this ).text().trim() === src ) { match = true; }
+				} );
+				$( this ).toggle( match );
+				var sql = $( this ).data( 'sql' );
+				$( '.scrutinizer-group-detail' ).each( function() {
+					if ( $( this ).data( 'sql' ) === sql ) { $( this ).toggle( match ); }
+				} );
+			} );
+		} );
+		$( document ).on( 'click', '.scrutinizer-clear-filter', function() {
+			$( '.scrutinizer-query-filter-bar' ).hide();
+			$( '.scrutinizer-query-row, .scrutinizer-query-group-row' ).show();
+			$( '.scrutinizer-group-detail' ).hide();
+		} );
+
 		// Home view navigation.
 		$( document ).on( 'click', '#scrutinizer-home-capture, #scrutinizer-empty-capture', function() {
 			showCaptureFlow();
@@ -2362,63 +2427,6 @@
 	}
 
 	/* ------------------------------------------------------------------ */
-	/*  Breakdown bar                                                      */
-	/* ------------------------------------------------------------------ */
-
-	function renderBreakdown( summary ) {
-		var breakdown = summary.breakdown || {};
-		var html = '<div class="scrutinizer-breakdown">';
-		html += '<p class="scrutinizer-tab-subtitle">How server request duration splits across source types \u2014 plugins, theme, core, and time before any hooks fire.</p>';
-		html += '<div class="scrutinizer-breakdown-bar">';
-
-		var barTypes = [ 'plugin', 'theme', 'core', 'mu-plugin', 'unknown', 'unattributed' ];
-		for ( var b = 0; b < barTypes.length; b++ ) {
-			var bt = barTypes[ b ];
-			if ( breakdown[ bt ] && breakdown[ bt ].percent > 0 ) {
-				var bColor = sourceColors[ bt ] || '#888';
-				html += '<div class="segment" style="width:' + breakdown[ bt ].percent + '%;background:' + bColor + '" title="' + esc( bt ) + ': ' + breakdown[ bt ].percent + '%"></div>';
-			}
-		}
-
-		html += '</div>'; // breakdown-bar
-
-		// Legend with unattributed tooltip.
-		var sourceLabels = {
-			'plugin': 'Plugins',
-			'theme': 'Theme',
-			'core': 'Core',
-			'mu-plugin': 'Must-Use',
-			'drop-in': 'Drop-in',
-			'unknown': 'Unknown',
-			'bootstrap': 'Bootstrap',
-			'unattributed': 'Unattributed'
-		};
-		html += '<div class="scrutinizer-breakdown-legend">';
-		for ( var lt in breakdown ) {
-			if ( breakdown.hasOwnProperty( lt ) && breakdown[ lt ].ms > 0 ) {
-				var color = sourceColors[ lt ] || '#888';
-				var displayLabel = sourceLabels[ lt ] || lt;
-				html += '<span class="legend-item">';
-				html += '<span class="legend-swatch" style="background:' + color + '"></span>';
-				html += esc( displayLabel ) + ': ' + breakdown[ lt ].ms + ' ms (' + breakdown[ lt ].percent + '%)';
-				if ( 'unattributed' === lt ) {
-					html += ' <button type="button" class="scrutinizer-info-toggle" aria-label="What is unattributed time?">ⓘ</button>';
-					html += '<span class="scrutinizer-info-bubble">Time between hook callbacks \u2014 WordPress core dispatching, template rendering, autoloaders, and direct function calls that bypass the hook system.</span>';
-				}
-				if ( 'bootstrap' === lt ) {
-					html += ' <button type="button" class="scrutinizer-info-toggle" aria-label="What is bootstrap time?">ⓘ</button>';
-					html += '<span class="scrutinizer-info-bubble">Time before any hooks fire \u2014 PHP startup, wp-config loading, database connection, reading all plugin/theme files into memory. Captured by the Scrutinizer mu-plugin.</span>';
-				}
-				html += '</span>';
-			}
-		}
-		html += '</div>'; // legend
-		html += '</div>'; // breakdown
-
-		return html;
-	}
-
-	/* ------------------------------------------------------------------ */
 	/*  Source table with weight glyphs                                     */
 	/* ------------------------------------------------------------------ */
 
@@ -2533,17 +2541,197 @@
 			return '<p class="scrutinizer-empty">' + msg + '</p>';
 		}
 
-		// Compute total query time.
+		// Ensure attribution is resolved for every query.
+		for ( var qi = 0; qi < queries.length; qi++ ) {
+			var qItem = queries[ qi ];
+			if ( ! qItem.source_name ) {
+				if ( qItem.attribution ) {
+					qItem.source_name = qItem.attribution.name || qItem.attribution.slug || qItem.attribution.type || '';
+					qItem.source_type = qItem.attribution.type || 'unknown';
+				} else if ( qItem.caller ) {
+					var inf = inferSourceFromCaller( qItem.caller );
+					if ( inf ) {
+						qItem.source_name = inf.name;
+						qItem.source_type = inf.type;
+					}
+				}
+			}
+		}
+
+		// Per-source summary.
+		var bySrc = {};
 		var totalQueryMs = 0;
 		for ( var q = 0; q < queries.length; q++ ) {
 			totalQueryMs += queries[ q ].time_ms || 0;
+			var sn = queries[ q ].source_name || '\u2014';
+			var st = queries[ q ].source_type || 'unknown';
+			if ( ! bySrc[ sn ] ) {
+				bySrc[ sn ] = { name: sn, type: st, count: 0, time: 0 };
+			}
+			bySrc[ sn ].count++;
+			bySrc[ sn ].time += queries[ q ].time_ms || 0;
+		}
+		var srcList = Object.keys( bySrc ).map( function( k ) { return bySrc[ k ]; } );
+		srcList.sort( function( a, b ) { return b.time - a.time; } );
+
+		// Duplicate grouping.
+		var groups = {};
+		var groupOrder = [];
+		for ( var gq = 0; gq < queries.length; gq++ ) {
+			var sqlKey = queries[ gq ].sql || '';
+			if ( ! groups[ sqlKey ] ) {
+				groups[ sqlKey ] = { sql: sqlKey, items: [], totalMs: 0 };
+				groupOrder.push( sqlKey );
+			}
+			groups[ sqlKey ].items.push( queries[ gq ] );
+			groups[ sqlKey ].totalMs += queries[ gq ].time_ms || 0;
+		}
+		var duplicateCount = 0;
+		for ( var dk = 0; dk < groupOrder.length; dk++ ) {
+			if ( groups[ groupOrder[ dk ] ].items.length > 1 ) {
+				duplicateCount++;
+			}
 		}
 
-		var html = '<div class="scrutinizer-queries-summary">';
+		var html = '<div class="scrutinizer-queries-header">';
+
+		// Total summary line.
+		html += '<div class="scrutinizer-queries-summary">';
 		html += '<strong>' + queries.length + ' queries</strong> totaling <strong>' + totalQueryMs.toFixed( 1 ) + ' ms</strong>';
+		if ( duplicateCount > 0 ) {
+			html += ' \u00b7 <span class="scrutinizer-duplicate-flag">' + duplicateCount + ' duplicate pattern' + ( duplicateCount !== 1 ? 's' : '' ) + '</span>';
+		}
 		html += '</div>';
 
+		// Per-source summary pills.
+		html += '<div class="scrutinizer-queries-sources">';
+		for ( var ps = 0; ps < srcList.length; ps++ ) {
+			var pSrc = srcList[ ps ];
+			var pillColor = sourceColors[ pSrc.type ] || '#888';
+			html += '<button type="button" class="scrutinizer-query-source-pill" data-source="' + esc( pSrc.name ) + '" style="background:' + pillColor + '">';
+			html += esc( pSrc.name ) + ': ' + pSrc.count + ' (' + pSrc.time.toFixed( 1 ) + ' ms)';
+			html += '</button> ';
+		}
+		html += '</div>';
+
+		// View toggle: Grouped vs Individual.
+		html += '<div class="scrutinizer-queries-toggle">';
+		html += '<button type="button" class="scrutinizer-toggle-btn active" data-view="grouped">Grouped</button>';
+		html += '<button type="button" class="scrutinizer-toggle-btn" data-view="individual">Individual</button>';
+		html += '</div>';
+
+		html += '</div>'; // queries-header
+
+		// Active filter indicator (hidden by default).
+		html += '<div class="scrutinizer-query-filter-bar" style="display:none">';
+		html += 'Showing queries from <strong class="scrutinizer-filter-source-name"></strong> ';
+		html += '<button type="button" class="scrutinizer-clear-filter">\u2715 Clear</button>';
+		html += '</div>';
+
+		// Grouped view (default).
+		html += '<div class="scrutinizer-queries-view" id="scrutinizer-queries-grouped">';
+		html += renderQueriesGrouped( groups, groupOrder );
+		html += '</div>';
+
+		// Individual view (hidden).
+		html += '<div class="scrutinizer-queries-view" id="scrutinizer-queries-individual" style="display:none">';
 		html += renderQueriesTableBody( queries );
+		html += '</div>';
+
+		return html;
+	}
+
+	/* ------------------------------------------------------------------ */
+	/*  Grouped queries view (N+1 detection)                               */
+	/* ------------------------------------------------------------------ */
+
+	function renderQueriesGrouped( groups, groupOrder ) {
+		// Sort by total time descending.
+		var sorted = groupOrder.slice().sort( function( a, b ) {
+			return groups[ b ].totalMs - groups[ a ].totalMs;
+		} );
+
+		var html = '<table class="scrutinizer-source-table scrutinizer-queries-table scrutinizer-queries-grouped-table widefat">';
+		html += '<thead><tr>';
+		html += '<th>SQL Pattern</th>';
+		html += '<th class="numeric">Count</th>';
+		html += '<th class="numeric">Total Time</th>';
+		html += '<th class="numeric">Avg</th>';
+		html += '<th>Sources</th>';
+		html += '</tr></thead><tbody>';
+
+		for ( var gi = 0; gi < sorted.length; gi++ ) {
+			var grp = groups[ sorted[ gi ] ];
+			var avgMs = grp.totalMs / grp.items.length;
+			var isSlow = grp.totalMs > 50;
+			var isDuplicate = grp.items.length > 1;
+
+			// Collect unique sources for this group.
+			var grpSources = {};
+			for ( var gs = 0; gs < grp.items.length; gs++ ) {
+				var gsn = grp.items[ gs ].source_name || '\u2014';
+				var gst = grp.items[ gs ].source_type || 'unknown';
+				grpSources[ gsn ] = gst;
+			}
+
+			var rowClass = '';
+			if ( isSlow ) { rowClass = ' scrutinizer-slow-query'; }
+
+			html += '<tr class="scrutinizer-query-group-row' + rowClass + '" data-sql="' + esc( grp.sql ) + '">';
+
+			// SQL with count badge.
+			html += '<td class="scrutinizer-sql-cell">';
+			html += '<code class="scrutinizer-sql-expandable" title="Click to expand">' + esc( truncate( grp.sql, 200 ) ) + '</code>';
+			if ( grp.sql.length > 200 ) {
+				html += '<code class="scrutinizer-sql-full" style="display:none">' + esc( grp.sql ) + '</code>';
+			}
+			html += '</td>';
+
+			// Count with N+1 badge.
+			html += '<td class="numeric">';
+			if ( isDuplicate ) {
+				html += '<span class="scrutinizer-duplicate-badge">\u00d7' + grp.items.length + '</span>';
+			} else {
+				html += '1';
+			}
+			html += '</td>';
+
+			html += '<td class="numeric">' + grp.totalMs.toFixed( 2 ) + ' ms</td>';
+			html += '<td class="numeric">' + avgMs.toFixed( 2 ) + ' ms</td>';
+
+			// Source pills.
+			html += '<td>';
+			for ( var gsKey in grpSources ) {
+				if ( grpSources.hasOwnProperty( gsKey ) ) {
+					var gsColor = sourceColors[ grpSources[ gsKey ] ] || '#888';
+					html += '<span class="scrutinizer-asset-source-pill" style="background:' + gsColor + '">' + esc( gsKey ) + '</span> ';
+				}
+			}
+			html += '</td>';
+
+			html += '</tr>';
+
+			// Expandable detail rows (hidden by default) for duplicates.
+			if ( isDuplicate ) {
+				html += '<tr class="scrutinizer-group-detail" data-sql="' + esc( grp.sql ) + '" style="display:none"><td colspan="5">';
+				html += '<table class="scrutinizer-group-detail-table"><thead><tr><th class="numeric">#</th><th>Source</th><th class="numeric">Time</th><th>Caller</th></tr></thead><tbody>';
+				for ( var di = 0; di < grp.items.length; di++ ) {
+					var dq = grp.items[ di ];
+					var dSrcName = dq.source_name || '\u2014';
+					var dSrcType = dq.source_type || 'unknown';
+					var dColor = sourceColors[ dSrcType ] || '#888';
+					html += '<tr>';
+					html += '<td class="numeric">' + ( di + 1 ) + '</td>';
+					html += '<td><span class="scrutinizer-asset-source-pill" style="background:' + dColor + '">' + esc( dSrcName ) + '</span></td>';
+					html += '<td class="numeric">' + ( dq.time_ms || 0 ).toFixed( 2 ) + ' ms</td>';
+					html += '<td class="scrutinizer-caller-cell"><span class="caller-short">' + esc( truncate( dq.caller || '', 80 ) ) + '</span></td>';
+					html += '</tr>';
+				}
+				html += '</tbody></table></td></tr>';
+			}
+		}
+
+		html += '</tbody></table>';
 		return html;
 	}
 
@@ -2560,29 +2748,29 @@
 		for ( var i = 0; i < queries.length; i++ ) {
 			var qr    = queries[ i ];
 			var qTime = ( qr.time_ms || 0 ).toFixed( 2 );
-			var slow  = qr.time_ms > 10 ? ' class="scrutinizer-slow-query"' : '';
+			var rowClass = qr.time_ms > 50 ? ' scrutinizer-slow-query' : ( qr.time_ms > 10 ? ' scrutinizer-warn-query' : '' );
 
-			// Source badge from caller attribution (F14).
+			// Source badge.
 			var qSource = '';
-			if ( qr.attribution ) {
-				var qAttr = qr.attribution;
-				var qColor = sourceColors[ qAttr.type ] || '#888';
-				qSource = '<span class="scrutinizer-asset-source-pill" style="background:' + qColor + '">' + esc( qAttr.name || qAttr.slug || qAttr.type ) + '</span>';
-				qr.source_name = qAttr.name || qAttr.slug || qAttr.type || '';
-			} else if ( qr.caller ) {
-				// Try to infer source from caller string.
-				var callerSource = inferSourceFromCaller( qr.caller );
-				if ( callerSource ) {
-					var csColor = sourceColors[ callerSource.type ] || '#888';
-					qSource = '<span class="scrutinizer-asset-source-pill" style="background:' + csColor + '">' + esc( callerSource.name ) + '</span>';
-					qr.source_name = callerSource.name || '';
-				}
+			var srcName = qr.source_name || '';
+			var srcType = qr.source_type || 'unknown';
+			if ( srcName ) {
+				var qColor = sourceColors[ srcType ] || '#888';
+				qSource = '<span class="scrutinizer-asset-source-pill scrutinizer-query-filter-pill" data-source="' + esc( srcName ) + '" style="background:' + qColor + '">' + esc( srcName ) + '</span>';
 			}
 
-			html += '<tr' + slow + '>';
+			html += '<tr class="scrutinizer-query-row' + rowClass + '" data-source="' + esc( srcName ) + '">';
 			html += '<td class="numeric">' + ( i + 1 ) + '</td>';
 			html += '<td>' + ( qSource || '<span class="scrutinizer-muted">\u2014</span>' ) + '</td>';
-			html += '<td class="scrutinizer-sql-cell"><code>' + esc( truncate( qr.sql || '', 200 ) ) + '</code></td>';
+
+			// Click-to-expand SQL.
+			html += '<td class="scrutinizer-sql-cell">';
+			html += '<code class="scrutinizer-sql-expandable" title="Click to expand">' + esc( truncate( qr.sql || '', 200 ) ) + '</code>';
+			if ( ( qr.sql || '' ).length > 200 ) {
+				html += '<code class="scrutinizer-sql-full" style="display:none">' + esc( qr.sql ) + '</code>';
+			}
+			html += '</td>';
+
 			html += '<td class="numeric">' + qTime + ' ms</td>';
 			var callerRaw = qr.caller || '';
 			var callerFrames = callerRaw.split( ', ' );
