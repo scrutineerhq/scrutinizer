@@ -3,7 +3,7 @@ Contributors: scrutineerhq
 Tags: performance, profiling, debug, optimization, profiler
 Requires at least: 6.0
 Tested up to: 7.0
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -76,6 +76,19 @@ Yes, with a low sample rate (0.1% or 1%). Scrutinizer is designed for background
 
 == Changelog ==
 
+= 1.0.3 =
+* Security: GDPR-compliant IP hashing — API log stores HMAC-SHA256 pseudonyms, not raw IPs
+* Security: Activation tokens bound to issuing admin user ID
+* Security: Proxy header spoofing fix (REMOTE_ADDR only by default)
+* Security: Query strings stripped from profile URLs at write time
+* New: Background profiling filters — user scope (all/anonymous/logged-in) and path exclusions
+* New: Proxy trust settings with auto-detection
+* New: Full-page settings view replaces settings modal
+* Improved: Profile data compressed with gzip (smaller database footprint)
+* Improved: Overhead claims updated with real benchmark numbers
+* Improved: Settings page polish — card hierarchy, callout notes, layout fixes
+* Community: 4 merged PRs from George Stephanis
+
 = 1.0.2 =
 * Improved: Early boot timer mu-plugin auto-installs on activation — bootstrap timing works without a WP-CLI step
 * Improved: Uninstall cleans up the mu-plugin along with all other plugin data
@@ -122,6 +135,9 @@ Yes, with a low sample rate (0.1% or 1%). Scrutinizer is designed for background
 4. Share — Zero-knowledge encrypted report sharing
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+Security hardening (IP hashing, token binding, proxy spoofing fix), background profiling filters, full-page settings view.
 
 = 1.0.2 =
 Auto-installs the early boot timer. Bootstrap timing now works out of the box.
