@@ -4854,7 +4854,7 @@
 		html += '<div id="scrutinizer-api-log-content"><p class="scrutinizer-empty">Loading...</p></div>';
 		html += '<div class="scrutinizer-diag-actions">';
 		html += '<button type="button" class="button" id="scrutinizer-refresh-api-log"><span class="dashicons dashicons-update"></span> Refresh</button>';
-		html += '<button type="button" class="button button-link" id="scrutinizer-clear-api-log" style="color:#d63638;">Clear Log</button>';
+		html += '<button type="button" class="button scrutinizer-btn-danger" id="scrutinizer-clear-api-log">Clear Log</button>';
 		html += '</div>';
 		html += '</div>';
 
