@@ -268,7 +268,7 @@
 
 .scrutinizer-card-hint {
 	font-size: 11px !important;
-	color: #787c82 !important;
+	color: #646970 !important;
 	font-style: italic;
 	margin-top: 2px;
 }
@@ -490,11 +490,12 @@
 /* Zoom viewport — clips content when zoomed */
 .scrutinizer-timeline-viewport {
 	position: relative;
-	overflow: hidden;
+	overflow: visible;
 	cursor: crosshair;
 }
 
 .scrutinizer-timeline-viewport.is-zoomed {
+	overflow: hidden;
 	cursor: grab;
 }
 
@@ -528,7 +529,7 @@
 	gap: 6px;
 	margin-bottom: 8px;
 	font-size: 11px;
-	color: #787c82;
+	color: #646970;
 }
 
 .scrutinizer-zoom-controls button {
@@ -556,7 +557,7 @@
 .scrutinizer-zoom-controls .zoom-hint {
 	margin-left: auto;
 	font-size: 10px;
-	color: #a7aaad;
+	color: #646970;
 }
 
 /* Custom tooltip */
@@ -602,7 +603,7 @@
 }
 
 .scrutinizer-timeline-tooltip .tt-stat-label {
-	color: #a7aaad;
+	color: #646970;
 	font-size: 10px;
 }
 
@@ -696,7 +697,7 @@
 	position: absolute;
 	transform: translateX(-50%);
 	font-size: 10px;
-	color: #787c82;
+	color: #646970;
 	font-variant-numeric: tabular-nums;
 }
 
@@ -752,7 +753,7 @@
 	border: none;
 	cursor: pointer;
 	font-size: 14px;
-	color: #787c82;
+	color: #646970;
 	vertical-align: middle;
 	padding: 0 2px;
 	line-height: 1;
@@ -1024,7 +1025,7 @@
 .scrutinizer-http-table .scrutinizer-caller-cell {
 	max-width: 250px;
 	font-size: 11px;
-	color: #787c82;
+	color: #646970;
 	cursor: pointer;
 	position: relative;
 }
@@ -1106,7 +1107,7 @@
 
 .role-anonymous {
 	background: transparent;
-	color: #787c82;
+	color: #646970;
 	border: 1px dashed #c3c4c7;
 }
 
@@ -1734,7 +1735,7 @@
 }
 
 .scrutinizer-history-dash {
-	color: #787c82;
+	color: #646970;
 }
 
 /* ----- Bulk action bar ----- */
@@ -1873,7 +1874,7 @@
 
 .http-label em {
 	font-style: normal;
-	color: #787c82;
+	color: #646970;
 	font-variant-numeric: tabular-nums;
 }
 
@@ -1888,7 +1889,7 @@
 
 .scrutinizer-density-label {
 	font-size: 10px;
-	color: #787c82;
+	color: #646970;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 	white-space: nowrap;
@@ -1996,7 +1997,7 @@
 
 .scrutinizer-io-summary {
 	font-size: 11px;
-	color: #787c82;
+	color: #646970;
 	margin-top: 4px;
 	text-align: right;
 	font-variant-numeric: tabular-nums;
@@ -2057,14 +2058,14 @@
 }
 
 .compare-profile-label small {
-	color: #787c82;
+	color: #646970;
 	font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .compare-vs {
 	font-size: 14px;
 	font-weight: 600;
-	color: #787c82;
+	color: #646970;
 }
 
 .scrutinizer-compare-table .numeric {
@@ -2084,7 +2085,7 @@
 }
 
 .scrutinizer-delta-neutral {
-	color: #787c82 !important;
+	color: #646970 !important;
 }
 
 /* Compare picker */
@@ -2111,7 +2112,7 @@
 .scrutinizer-picker-close {
 	font-size: 18px !important;
 	line-height: 1 !important;
-	color: #787c82 !important;
+	color: #646970 !important;
 	text-decoration: none !important;
 	padding: 0 4px !important;
 }
@@ -2119,7 +2120,7 @@
 .scrutinizer-picker-section h5 {
 	margin: 12px 0 4px;
 	font-size: 12px;
-	color: #787c82;
+	color: #646970;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 }
@@ -2155,7 +2156,7 @@
 
 .picker-meta {
 	font-size: 11px;
-	color: #787c82;
+	color: #646970;
 }
 
 .picker-note {
@@ -2194,7 +2195,7 @@
 
 #scrutinizer-inline-compare-close {
 	font-size: 16px !important;
-	color: #787c82 !important;
+	color: #646970 !important;
 	text-decoration: none !important;
 }
 
@@ -2240,7 +2241,7 @@
 
 .verdict-noise {
 	background: #f0f0f1;
-	color: #787c82;
+	color: #646970;
 	border: 1px solid #c3c4c7;
 }
 
@@ -2260,7 +2261,7 @@
 .scrutinizer-referer {
 	margin: 4px 0 8px;
 	font-size: 12px;
-	color: #787c82;
+	color: #646970;
 }
 
 .scrutinizer-referer code {
@@ -2289,7 +2290,7 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 12px;
-	color: #787c82;
+	color: #646970;
 }
 
 .scrutinizer-source-pill,
@@ -2310,7 +2311,7 @@
 }
 
 .scrutinizer-muted {
-	color: #787c82;
+	color: #646970;
 	font-style: italic;
 }
 
@@ -2549,7 +2550,7 @@
 
 .scrutinizer-trace-pill.scrutinizer-trace-save {
 	border-style: dashed;
-	color: #a7aaad;
+	color: #646970;
 }
 
 .scrutinizer-trace-pill.scrutinizer-trace-save:hover {
@@ -2605,7 +2606,7 @@
 }
 
 #scrutinizer-trace-clear {
-	color: #a7aaad;
+	color: #646970;
 	font-size: 12px;
 	text-decoration: none;
 }
@@ -2793,7 +2794,7 @@
 .scrutinizer-api-privacy-note {
 	margin-top: 10px;
 	font-size: 12px;
-	color: #787c82;
+	color: #646970;
 	line-height: 1.5;
 }
 
@@ -2988,7 +2989,7 @@
 .scrutinizer-api-base {
 	margin: 12px 0 0;
 	font-size: 12px;
-	color: #787c82;
+	color: #646970;
 }
 
 .scrutinizer-api-base code {
@@ -3094,7 +3095,7 @@
 	border: none;
 	font-size: 24px;
 	cursor: pointer;
-	color: #787c82;
+	color: #646970;
 	padding: 0 4px;
 	line-height: 1;
 }
@@ -3203,7 +3204,7 @@
 	display: block;
 	font-size: 10px;
 	font-weight: 400;
-	color: #787c82;
+	color: #646970;
 	text-align: center;
 	margin-top: 2px;
 }
@@ -3233,7 +3234,7 @@
 .scrutinizer-overhead-note {
 	margin: 16px 0 0;
 	font-size: 12px;
-	color: #787c82;
+	color: #646970;
 	font-style: italic;
 }
 
@@ -3277,7 +3278,7 @@
 	display: block;
 	font-size: 10px;
 	font-weight: 400;
-	color: #787c82;
+	color: #646970;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 }
@@ -3307,7 +3308,7 @@
 	font-size: 11px;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
-	color: #787c82;
+	color: #646970;
 }
 
 .scrutinizer-api-log-table td {
@@ -3338,7 +3339,7 @@ details.scrutinizer-term {
 
 details.scrutinizer-term > summary {
 	display: inline;
-	border-bottom: 1px dotted #787c82;
+	border-bottom: 1px dotted #646970;
 	cursor: help;
 	list-style: none;
 }
@@ -3360,7 +3361,7 @@ details.scrutinizer-term[open] > summary {
 details.scrutinizer-term > .scrutinizer-term-explain {
 	display: block;
 	font-size: 12px;
-	color: #787c82;
+	color: #646970;
 	line-height: 1.5;
 	margin: 4px 0 8px;
 	padding-left: 0;
@@ -3403,7 +3404,7 @@ details.scrutinizer-term > .scrutinizer-term-explain {
 
 .scrutinizer-route-key {
 	font-size: 12px;
-	color: #787c82;
+	color: #646970;
 	font-family: Menlo, Consolas, 'Courier New', monospace;
 }
 
