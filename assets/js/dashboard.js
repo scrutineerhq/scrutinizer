@@ -293,8 +293,7 @@
 		} );
 
 		$( document ).on( 'click', '#scrutinizer-home-settings', function() {
-			$( '#scrutinizer-settings-modal' ).fadeIn( 150 );
-			$( '.scrutinizer-gear-toggle' ).attr( 'aria-expanded', 'true' );
+			showSettingsView();
 		} );
 
 		// Back buttons.
@@ -307,22 +306,14 @@
 			startProfiling( $( this ).data( 'target' ) || '', $( this ).data( 'mode' ) || '' );
 		} );
 
-		// Settings gear — open modal.
+		// Settings gear — show settings view.
 		$( document ).on( 'click', '.scrutinizer-gear-toggle', function() {
-			$( '#scrutinizer-settings-modal' ).fadeIn( 150 );
-			$( this ).attr( 'aria-expanded', 'true' );
+			showSettingsView();
 		} );
 
-		// Close settings modal.
-		$( document ).on( 'click', '#scrutinizer-settings-modal-close, .scrutinizer-modal-overlay', function() {
-			$( '#scrutinizer-settings-modal' ).fadeOut( 150 );
-			$( '.scrutinizer-gear-toggle' ).attr( 'aria-expanded', 'false' );
-		} );
-		$( document ).on( 'keydown', function( e ) {
-			if ( 27 === e.keyCode && $( '#scrutinizer-settings-modal' ).is( ':visible' ) ) {
-				$( '#scrutinizer-settings-modal' ).fadeOut( 150 );
-				$( '.scrutinizer-gear-toggle' ).attr( 'aria-expanded', 'false' );
-			}
+		// Back from settings.
+		$( document ).on( 'click', '#scrutinizer-settings-back', function() {
+			showHomeView();
 		} );
 
 		// Stop button.
@@ -1098,7 +1089,7 @@
 		html += '</div>';
 		html += '</div>';
 
-		$( '.scrutinizer-qp-controls' ).after( html );
+		$( '#scrutinizer-settings-storage' ).append( html );
 
 		$( '#scrutinizer-retention-select' ).on( 'change', function() {
 			var days = parseInt( $( this ).val(), 10 );
@@ -1152,7 +1143,7 @@
 		html += '<span id="scrutinizer-proxy-saved" class="scrutinizer-saved-notice" style="display:none;">\u2713 Saved</span>';
 		html += '</div>';
 
-		$( '.scrutinizer-retention-controls' ).after( html );
+		$( '#scrutinizer-settings-network' ).append( html );
 
 		$( '#scrutinizer-proxy-toggle' ).on( 'change', function() {
 			var enabled = $( this ).is( ':checked' );
@@ -1190,6 +1181,7 @@
 		$( '#scrutinizer-compare-view' ).hide();
 		$( '#scrutinizer-activation' ).hide();
 		$( '#scrutinizer-api-view' ).hide();
+		$( '#scrutinizer-settings-view' ).hide();
 		currentView = 'home';
 	}
 
@@ -1199,6 +1191,7 @@
 		$( '#scrutinizer-results' ).hide();
 		$( '#scrutinizer-top-tabs' ).hide();
 		$( '#scrutinizer-detail' ).hide();
+		$( '#scrutinizer-settings-view' ).hide();
 	}
 
 	function showProfilesView() {
@@ -1206,6 +1199,7 @@
 		$( '#scrutinizer-capture-flow' ).hide();
 		$( '#scrutinizer-results' ).show();
 		$( '#scrutinizer-detail' ).hide();
+		$( '#scrutinizer-settings-view' ).hide();
 
 		// Lazy-load: only fetch routes + render tabs on first visit.
 		if ( ! profilesLoaded ) {
@@ -1213,6 +1207,21 @@
 			renderTopTabs();
 			fetchGrouped();
 		}
+	}
+
+	function showSettingsView() {
+		$( '#scrutinizer-home' ).hide();
+		$( '#scrutinizer-capture-flow' ).hide();
+		$( '#scrutinizer-results' ).hide();
+		$( '#scrutinizer-top-tabs' ).hide();
+		$( '#scrutinizer-detail' ).hide();
+		$( '#scrutinizer-route-detail' ).hide();
+		$( '#scrutinizer-history-view' ).hide();
+		$( '#scrutinizer-compare-view' ).hide();
+		$( '#scrutinizer-activation' ).hide();
+		$( '#scrutinizer-api-view' ).hide();
+		$( '#scrutinizer-settings-view' ).show();
+		currentView = 'settings';
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -1249,9 +1258,9 @@
 	}
 
 	function showVisitorGuidance( url ) {
-		var $modal = $( '#scrutinizer-settings-modal' );
-		if ( $modal.is( ':visible' ) ) {
-			$modal.fadeOut( 150 );
+		// If settings view is showing, go back to home first.
+		if ( currentView === 'settings' ) {
+			showHomeView();
 		}
 
 		// Auto-copy URL to clipboard.

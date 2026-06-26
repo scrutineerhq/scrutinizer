@@ -156,7 +156,7 @@ class Dashboard {
 				<a href="#" id="scrutinizer-home-link" style="text-decoration:none;color:inherit;">
 				<?php echo esc_html__( 'Scrutinizer', 'scrutinizer' ); ?>
 				</a>
-				<button type="button" class="scrutinizer-gear-toggle" title="<?php echo esc_attr__( 'Settings', 'scrutinizer' ); ?>" aria-label="<?php echo esc_attr__( 'Settings', 'scrutinizer' ); ?>" aria-expanded="false" aria-controls="scrutinizer-settings-panel">
+				<button type="button" class="scrutinizer-gear-toggle" title="<?php echo esc_attr__( 'Settings', 'scrutinizer' ); ?>" aria-label="<?php echo esc_attr__( 'Settings', 'scrutinizer' ); ?>" aria-expanded="false" aria-controls="scrutinizer-settings-view">
 					<span class="dashicons dashicons-admin-generic"></span>
 				</button>
 			</h1>
@@ -264,53 +264,67 @@ class Dashboard {
 				<div id="scrutinizer-detail-content"></div>
 			</div>
 
-			<!-- Settings Panel (D33 — toggled by gear icon) -->
-			<div id="scrutinizer-settings-modal" class="scrutinizer-modal" style="display:none;" role="dialog" aria-label="<?php echo esc_attr__( 'Settings', 'scrutinizer' ); ?>">
-				<div class="scrutinizer-modal-overlay"></div>
-				<div class="scrutinizer-modal-content">
-					<div class="scrutinizer-modal-header">
-						<h2><?php echo esc_html__( 'Settings', 'scrutinizer' ); ?></h2>
-						<button type="button" id="scrutinizer-settings-modal-close" class="scrutinizer-modal-close" aria-label="<?php echo esc_attr__( 'Close', 'scrutinizer' ); ?>">&times;</button>
+			<!-- Settings Panel (full view — toggled by gear icon) -->
+			<div id="scrutinizer-settings-view" class="scrutinizer-settings-view" style="display:none;">
+				<button type="button" class="button button-link" id="scrutinizer-settings-back">
+					<?php echo esc_html__( '← Back to dashboard', 'scrutinizer' ); ?>
+				</button>
+				<h2><?php echo esc_html__( 'Settings', 'scrutinizer' ); ?></h2>
+
+				<div class="scrutinizer-settings-grid">
+					<!-- Profiling card -->
+					<div class="scrutinizer-settings-card" id="scrutinizer-settings-profiling">
+						<h3 class="scrutinizer-settings-card-title"><?php echo esc_html__( 'Profiling', 'scrutinizer' ); ?></h3>
+
+						<!-- Session Status -->
+						<div class="scrutinizer-status-card" id="scrutinizer-status">
+							<h4><?php echo esc_html__( 'Session Status', 'scrutinizer' ); ?></h4>
+							<div class="scrutinizer-status-indicator">
+								<span class="scrutinizer-dot <?php echo $is_active ? 'active' : 'inactive'; ?>"></span>
+								<span id="scrutinizer-status-text">
+									<?php
+									if ( $is_active ) {
+										echo esc_html__( 'Profiling active', 'scrutinizer' );
+									} else {
+										echo esc_html__( 'Profiling inactive', 'scrutinizer' );
+									}
+									?>
+								</span>
+							</div>
+
+							<?php if ( $is_active ) : ?>
+								<p class="scrutinizer-session-info">
+									<?php
+									printf(
+										/* translators: %s: session ID */
+										esc_html__( 'Session: %s', 'scrutinizer' ),
+										'<code>' . esc_html( $session_id ) . '</code>'
+									);
+									?>
+								</p>
+							<?php endif; ?>
+						</div>
+
+						<!-- Controls -->
+						<div class="scrutinizer-controls" id="scrutinizer-controls">
+							<?php if ( $is_active ) : ?>
+								<button type="button" class="button button-secondary button-large" id="scrutinizer-stop"><?php echo esc_html__( 'Stop Profiling', 'scrutinizer' ); ?></button>
+							<?php endif; ?>
+						</div>
+
+						<!-- Background Profiling + Query Profiling rendered by JS here -->
 					</div>
-					<div class="scrutinizer-modal-body" id="scrutinizer-settings-panel">
 
-				<!-- Session Status -->
-				<div class="scrutinizer-status-card" id="scrutinizer-status">
-					<h3><?php echo esc_html__( 'Session Status', 'scrutinizer' ); ?></h3>
-					<div class="scrutinizer-status-indicator">
-						<span class="scrutinizer-dot <?php echo $is_active ? 'active' : 'inactive'; ?>"></span>
-						<span id="scrutinizer-status-text">
-							<?php
-							if ( $is_active ) {
-								echo esc_html__( 'Profiling active', 'scrutinizer' );
-							} else {
-								echo esc_html__( 'Profiling inactive', 'scrutinizer' );
-							}
-							?>
-						</span>
+					<!-- Storage card -->
+					<div class="scrutinizer-settings-card" id="scrutinizer-settings-storage">
+						<h3 class="scrutinizer-settings-card-title"><?php echo esc_html__( 'Storage', 'scrutinizer' ); ?></h3>
+						<!-- Retention controls rendered by JS here -->
 					</div>
 
-					<?php if ( $is_active ) : ?>
-						<p class="scrutinizer-session-info">
-							<?php
-							printf(
-								/* translators: %s: session ID */
-								esc_html__( 'Session: %s', 'scrutinizer' ),
-								'<code>' . esc_html( $session_id ) . '</code>'
-							);
-							?>
-						</p>
-					<?php endif; ?>
-				</div>
-
-				<!-- Controls -->
-				<div class="scrutinizer-controls" id="scrutinizer-controls">
-					<?php if ( $is_active ) : ?>
-						<button type="button" class="button button-secondary button-large" id="scrutinizer-stop"><?php echo esc_html__( 'Stop Profiling', 'scrutinizer' ); ?></button>
-					<?php endif; ?>
-				</div>
-
-				<!-- Background Profiling + Query Profiling rendered by JS here -->
+					<!-- Network card -->
+					<div class="scrutinizer-settings-card" id="scrutinizer-settings-network">
+						<h3 class="scrutinizer-settings-card-title"><?php echo esc_html__( 'Network', 'scrutinizer' ); ?></h3>
+						<!-- Proxy controls rendered by JS here -->
 					</div>
 				</div>
 			</div>

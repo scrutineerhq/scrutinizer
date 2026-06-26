@@ -3038,127 +3038,85 @@
 
 /* ----- Settings Modal ----- */
 
-.scrutinizer-modal {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	z-index: 100000;
-	display: flex;
-	align-items: flex-start;
-	justify-content: center;
-	padding-top: 80px;
+/* ------------------------------------------------------------------ */
+/*  Settings View                                                      */
+/* ------------------------------------------------------------------ */
+
+.scrutinizer-settings-view {
+	margin-top: 8px;
 }
 
-.scrutinizer-modal-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-}
-
-.scrutinizer-modal-content {
-	position: relative;
-	background: #fff;
-	border-radius: 8px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-	width: 580px;
-	max-width: 90vw;
-	max-height: calc(100vh - 160px);
-	overflow-y: auto;
-}
-
-.scrutinizer-modal-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 20px 32px;
-	border-bottom: 1px solid #dcdcde;
-	position: sticky;
-	top: 0;
-	background: #fff;
-	border-radius: 8px 8px 0 0;
-	z-index: 1;
-}
-
-.scrutinizer-modal-header h2 {
-	margin: 0;
-	font-size: 16px;
+.scrutinizer-settings-view > h2 {
+	font-size: 18px;
 	font-weight: 600;
+	margin: 16px 0 20px;
 }
 
-.scrutinizer-modal-close {
-	background: none;
-	border: none;
-	font-size: 24px;
-	cursor: pointer;
-	color: #646970;
-	padding: 0 4px;
-	line-height: 1;
+.scrutinizer-settings-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 16px;
 }
 
-.scrutinizer-modal-close:hover {
+@media ( min-width: 1200px ) {
+	.scrutinizer-settings-grid {
+		grid-template-columns: 1fr 1fr;
+	}
+	/* Profiling card spans full width since it's the biggest */
+	#scrutinizer-settings-profiling {
+		grid-column: 1 / -1;
+	}
+}
+
+.scrutinizer-settings-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 24px;
+}
+
+.scrutinizer-settings-card-title {
+	margin: 0 0 16px;
+	padding: 0 0 12px;
+	border-bottom: 1px solid #f0f0f1;
+	font-size: 14px;
+	font-weight: 600;
 	color: #1d2327;
 }
 
-.scrutinizer-modal-body {
-	padding: 20px;
-}
-
-/* Section spacing inside settings modal */
-#scrutinizer-settings-panel > .scrutinizer-status-card,
-#scrutinizer-settings-panel > .scrutinizer-controls,
-#scrutinizer-settings-panel > .scrutinizer-bg-controls,
-#scrutinizer-settings-panel > .scrutinizer-qp-controls {
-	margin: 0;
-	padding: 20px 32px;
+.scrutinizer-settings-card .scrutinizer-status-card {
+	margin: 0 0 16px;
+	padding: 0;
 	border: none;
-	border-bottom: 1px solid #dcdcde;
 	border-radius: 0;
 	box-shadow: none;
 }
 
-#scrutinizer-settings-panel > .scrutinizer-status-card:first-child {
-	margin-top: 0;
-}
-
-/* Hide the controls section when it's empty (profiling inactive). */
-#scrutinizer-settings-panel > .scrutinizer-controls:empty {
+.scrutinizer-settings-card .scrutinizer-controls:empty {
 	display: none;
 }
 
-#scrutinizer-settings-panel > .scrutinizer-controls {
-	border-left: 4px solid var(--wp-admin-theme-color, #2271b1);
-	background: #fff;
-	padding-left: 28px;
-}
-
-#scrutinizer-settings-panel > .scrutinizer-bg-controls,
-#scrutinizer-settings-panel > .scrutinizer-qp-controls {
-	border-left: 4px solid var(--wp-admin-theme-color, #2271b1);
-	padding-left: 28px;
-}
-
-#scrutinizer-settings-panel {
-	margin: 0;
+.scrutinizer-settings-card .scrutinizer-controls {
+	margin: 0 0 16px;
+	padding: 0;
 	border: none;
 	box-shadow: none;
 }
 
-#scrutinizer-settings-panel h3 {
-	margin-top: 0;
-	margin-bottom: 12px;
-	font-size: 14px;
-	font-weight: 600;
+.scrutinizer-settings-card .scrutinizer-bg-controls,
+.scrutinizer-settings-card .scrutinizer-qp-controls,
+.scrutinizer-settings-card .scrutinizer-retention-controls,
+.scrutinizer-settings-card .scrutinizer-proxy-controls {
+	margin: 0;
+	padding: 16px 0 0;
+	border-top: 1px solid #f0f0f1;
 }
 
-#scrutinizer-settings-panel h3:not(:first-child) {
-	margin-top: 0;
-	padding-top: 0;
-	border-top: none;
+.scrutinizer-settings-card h4 {
+	margin: 0 0 8px;
+	font-size: 13px;
+	font-weight: 600;
+	color: #50575e;
 }
 
 /* ------------------------------------------------------------------ */
