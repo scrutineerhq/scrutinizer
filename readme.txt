@@ -3,7 +3,7 @@ Contributors: scrutineerhq
 Tags: performance, profiling, debug, optimization, profiler
 Requires at least: 6.0
 Tested up to: 7.0
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -76,6 +76,10 @@ Yes, with a low sample rate (0.1% or 1%). Scrutinizer is designed for background
 
 == Changelog ==
 
+= 1.0.2 =
+* Improved: Early boot timer mu-plugin auto-installs on activation — bootstrap timing works without a WP-CLI step
+* Improved: Uninstall cleans up the mu-plugin along with all other plugin data
+
 = 1.0.1 =
 * Fix: handle_prompt AJAX handler now returns proper JSON response
 * Fix: API audit log table creation on activation
@@ -118,6 +122,9 @@ Yes, with a low sample rate (0.1% or 1%). Scrutinizer is designed for background
 4. Share — Zero-knowledge encrypted report sharing
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+Auto-installs the early boot timer. Bootstrap timing now works out of the box.
 
 = 1.0.1 =
 Bug fixes and polish. Adds shared reports ledger and profile TTL controls.
