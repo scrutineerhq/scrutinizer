@@ -4788,7 +4788,7 @@
 		html += '<div class="scrutinizer-send-agent-controls">';
 		html += '<button type="button" class="button button-primary" id="scrutinizer-create-api-key">';
 		html += '<span class="dashicons dashicons-clipboard"></span> Copy Prompt to Clipboard</button>';
-		html += '<button type="button" class="button button-link scrutinizer-revoke-link" id="scrutinizer-revoke-api-key" style="display:none;">';
+		html += '<button type="button" class="button scrutinizer-btn-danger" id="scrutinizer-revoke-api-key" style="display:none;">';
 		html += '<span class="dashicons dashicons-dismiss"></span> Revoke Access</button>';
 		html += '</div>';
 		html += '<p class="scrutinizer-privacy-advisory">This prompt includes your site URL and a short-lived credential. Paste it into a private AI conversation \u2014 not a public or shared chat.</p>';
@@ -5448,7 +5448,7 @@
 					html += '<button type="button" class="button" id="scrutinizer-share-copy">Copy</button>';
 					html += '</div>';
 					html += '<p class="description">Expires: ' + esc( new Date( resp.expires_at ).toLocaleString() ) + '</p>';
-					html += '<button type="button" class="button button-link scrutinizer-revoke-link" id="scrutinizer-share-revoke" data-id="' + esc( resp.id ) + '" data-token="' + esc( resp.revoke_token ) + '">';
+					html += '<button type="button" class="button scrutinizer-btn-danger" id="scrutinizer-share-revoke" data-id="' + esc( resp.id ) + '" data-token="' + esc( resp.revoke_token ) + '">';
 					html += '<span class="dashicons dashicons-dismiss"></span> Revoke</button>';
 					html += '</div>';
 
