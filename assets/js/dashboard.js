@@ -1870,6 +1870,37 @@
 			html += '<div class="timeline-segment" style="left:' + seg.pct_start.toFixed( 3 ) + '%;width:' + Math.max( seg.pct_width, 0.15 ).toFixed( 3 ) + '%;background:' + color + '" data-callback="' + esc( seg.callback ) + '" data-source="' + esc( seg.source ) + '" data-type="' + esc( seg.type ) + '" data-wall-ns="' + seg.wall_ns + '" data-pct="' + seg.pct_width.toFixed( 2 ) + '"></div>';
 		}
 
+		// Memory usage sparkline — overlay on the timeline bar.
+		var memPoints = [];
+		for ( var mi = 0; mi < timeline.length; mi++ ) {
+			var memVal = timeline[ mi ].mem_after || 0;
+			if ( memVal > 0 ) {
+				memPoints.push( { pct: timeline[ mi ].pct_start + ( timeline[ mi ].pct_width || 0 ), mem: memVal } );
+			}
+		}
+		if ( memPoints.length >= 2 ) {
+			var memMin = memPoints[ 0 ].mem;
+			var memMax = memPoints[ 0 ].mem;
+			for ( var mm = 1; mm < memPoints.length; mm++ ) {
+				if ( memPoints[ mm ].mem < memMin ) { memMin = memPoints[ mm ].mem; }
+				if ( memPoints[ mm ].mem > memMax ) { memMax = memPoints[ mm ].mem; }
+			}
+			var memRange = memMax - memMin;
+			if ( memRange > memMax * 0.01 ) {
+				var pathD = '';
+				for ( var mp = 0; mp < memPoints.length; mp++ ) {
+					var sx = memPoints[ mp ].pct;
+					var sy = 100 - ( ( memPoints[ mp ].mem - memMin ) / memRange ) * 80 - 10;
+					pathD += ( mp === 0 ? 'M' : 'L' ) + sx.toFixed( 2 ) + ',' + sy.toFixed( 1 ) + ' ';
+				}
+				var memLabel = formatBytes( memMax ) + ' peak';
+				html += '<svg class="memory-overlay-svg" viewBox="0 0 100 100" preserveAspectRatio="none">';
+				html += '<path d="' + pathD + '" fill="none" stroke="rgba(230,126,34,0.7)" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+				html += '</svg>';
+				html += '<span class="memory-overlay-label">' + esc( memLabel ) + '</span>';
+			}
+		}
+
 		html += '</div>'; // timeline-bar
 
 		// Time axis.
@@ -2002,42 +2033,6 @@
 			html += '</div>';
 		}
 
-		// Memory usage sparkline — SVG line synced to the timeline width.
-		var memPoints = [];
-		for ( var mi = 0; mi < timeline.length; mi++ ) {
-			var memVal = timeline[ mi ].mem_after || 0;
-			if ( memVal > 0 ) {
-				memPoints.push( { pct: timeline[ mi ].pct_start + ( timeline[ mi ].pct_width || 0 ), mem: memVal } );
-			}
-		}
-		if ( memPoints.length >= 2 ) {
-			var memMin = memPoints[ 0 ].mem;
-			var memMax = memPoints[ 0 ].mem;
-			for ( var mm = 1; mm < memPoints.length; mm++ ) {
-				if ( memPoints[ mm ].mem < memMin ) { memMin = memPoints[ mm ].mem; }
-				if ( memPoints[ mm ].mem > memMax ) { memMax = memPoints[ mm ].mem; }
-			}
-			// Only render if there's meaningful range (>1% variation).
-			var memRange = memMax - memMin;
-			if ( memRange > memMax * 0.01 ) {
-				var svgH = 28;
-				var pathD = '';
-				for ( var mp = 0; mp < memPoints.length; mp++ ) {
-					var sx = memPoints[ mp ].pct;
-					var sy = svgH - 2 - ( ( memPoints[ mp ].mem - memMin ) / memRange ) * ( svgH - 4 );
-					pathD += ( mp === 0 ? 'M' : 'L' ) + sx + ',' + sy.toFixed( 1 ) + ' ';
-				}
-				var memLabel = formatBytes( memMax ) + ' peak';
-				html += '<div class="scrutinizer-memory-sparkline-wrap">';
-				html += '<span class="scrutinizer-density-label">Memory</span>';
-				html += '<div class="scrutinizer-memory-sparkline">';
-				html += '<svg viewBox="0 0 100 ' + svgH + '" preserveAspectRatio="none" class="memory-sparkline-svg">';
-				html += '<path d="' + pathD + '" fill="none" stroke="#e67e22" stroke-width="1.5" vector-effect="non-scaling-stroke"/>';
-				html += '</svg>';
-				html += '<span class="memory-sparkline-label">' + esc( memLabel ) + '</span>';
-				html += '</div></div>';
-			}
-		}
 
 		html += '</div>'; // zoom-wrapper
 		html += '</div>'; // viewport

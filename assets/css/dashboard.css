@@ -1927,36 +1927,28 @@
 
 /* ----- Memory sparkline ----- */
 
-.scrutinizer-memory-sparkline-wrap {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	margin-top: 6px;
-}
-
-.scrutinizer-memory-sparkline {
-	flex: 1;
-	position: relative;
-	height: 28px;
-	transform-origin: left center;
-	will-change: transform;
-	backface-visibility: hidden;
-}
-
-.memory-sparkline-svg {
+/* Memory sparkline — overlaid on the timeline bar */
+.memory-overlay-svg {
+	position: absolute;
+	top: 0;
+	left: 0;
 	width: 100%;
 	height: 100%;
-	display: block;
+	pointer-events: none;
+	z-index: 2;
 }
 
-.memory-sparkline-label {
+.memory-overlay-label {
 	position: absolute;
-	right: 0;
-	top: -1px;
+	right: 4px;
+	top: 2px;
 	font-size: 9px;
 	color: #e67e22;
 	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
+	pointer-events: none;
+	z-index: 3;
+	text-shadow: 0 0 3px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.7);
 }
 
 /* ----- I/O summary counts ----- */
