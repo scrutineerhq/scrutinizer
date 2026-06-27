@@ -9,7 +9,7 @@
   - _Verify:_ `grep -ri "page.load\|page load" --include="*.php" includes/` — zero user-facing results.
 
 - [ ] **Exclusive + nested = inclusive.** Exclusive Callback Time = inclusive minus observed nested. These are distinct fields in every stored profile.
-  - _Verify:_ `Report::build()` produces separate `exclusive_time` and `inclusive_time` fields per callback.
+  - _Verify:_ `Report::compile()` produces separate `exclusive_ns` and `inclusive_ns` fields per callback.
 
 - [ ] **Unattributed time is always shown.** Every profile view displays the gap between Server Request Duration and sum of exclusive callback times. Never hidden, never merged.
   - _Verify:_ Dashboard template includes unattributed time metric card.
@@ -26,7 +26,7 @@
   - _Verify:_ `Storage::sanitize_profile()` strips these. Test suite covers each category.
 
 - [ ] **SQL queries are reduced to verb + table(s) only.** Stored and displayed queries contain ONLY the SQL verb (SELECT, INSERT, UPDATE, DELETE, SHOW) and the table name(s). No column names, no field lists, no WHERE clauses, no predicates (LIMIT, HAVING, GROUP BY, ORDER BY), no literal values, no query structure beyond verb + table. JOINs include all participating tables. CTE aliases are excluded. Subquery internals are excluded (depth-aware). Enforced by `QueryReducer::reduce()` at both write time (Profiler) AND read time (Sanitizer) as defense-in-depth. This has regressed twice — treat any query output containing SQL keywords beyond the verb as a bug.
-  - _Verify:_ `wp eval` to fetch a stored profile's queries array — every `sql` value matches pattern `/^(SELECT|INSERT|UPDATE|DELETE|SHOW|REPLACE|CREATE|OPTIMIZE)\s[\w, ]+$/` or is `SELECT FOUND_ROWS()` or a bare verb.
+  - _Verify:_ `wp eval` to fetch a stored profile's queries array — every `sql` value matches pattern `/^(SELECT|INSERT|UPDATE|DELETE|REPLACE|SHOW|CREATE|ALTER|DROP|TRUNCATE|OPTIMIZE|ANALYZE|CHECK|REPAIR)\s[\w, ]+$/` or is `SELECT FOUND_ROWS()` or a bare verb. (DDL verbs are emitted as verb + table only, same as DML.)
 
 - [ ] **Shared reports contain only user-approved sections.** The include/exclude checklist defaults all-on, but the published artifact matches exactly what the preview showed.
   - _Verify:_ `Share::build_report()` filters sections by user selection. Test covers section omission.
@@ -57,10 +57,12 @@
 ## Regression Language
 
 - [ ] **"Likely Regression" requires all three thresholds.** ≥5 matched requests, ≥20% + 100ms median increase, consistent direction in ≥3/5 comparisons. Below that: "Difference Observed" only.
-  - _Verify:_ `Report::classify_change()` checks all three before returning `likely_regression`.
+  - _Status:_ **Deferred to M3.** The server-side classifier (`Report::classify_change()`) is not yet implemented. Until it exists, the UI must never assert a verdict stronger than "Difference observed" for a single comparison (enforced in `dashboard.js` `classifyDelta`).
+  - _Verify (target):_ `Report::classify_change()` checks all three before returning `likely_regression`.
 
 - [ ] **Route-matched comparison, not URL-based.** Baselines match by route fingerprint (route class + frontend/admin + anon/auth + cache state), not raw URL string.
-  - _Verify:_ `Report::match_baseline()` uses `Profiler::route_fingerprint()`, not `$_SERVER['REQUEST_URI']`.
+  - _Status:_ **Deferred to M3.** `Profiler::route_fingerprint()` / `Report::match_baseline()` do not exist yet; comparison currently keys on the stored `route_key` string.
+  - _Verify (target):_ `Report::match_baseline()` uses `Profiler::route_fingerprint()`, not `$_SERVER['REQUEST_URI']`.
 
 ## Infrastructure
 

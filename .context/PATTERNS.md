@@ -14,7 +14,7 @@ scrutineer/
 │   └── mu-plugin/          # Early boot mu-plugin template
 ├── includes/
 │   ├── Admin/
-│   │   ├── Ajax.php        # AJAX handlers (31 handlers)
+│   │   ├── Ajax.php        # AJAX handlers (33 handlers)
 │   │   └── Dashboard.php   # wp-admin page registration and rendering
 │   ├── Api/
 │   │   ├── ApplicationPassword.php # App password lifecycle
@@ -94,7 +94,7 @@ The autoloader is in `scrutinizer.php`. No Composer autoload — wp.org plugins 
 7. Admin views results in dashboard
    └→ Dashboard::render()
       ├→ Storage::get_profiles()
-      └→ Report::build() ← aggregate, rank, classify
+      └→ Report::compile() ← aggregate, rank, classify
 ```
 
 ## Timing
