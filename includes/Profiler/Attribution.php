@@ -275,6 +275,16 @@ class Attribution {
 	 * @return bool
 	 */
 	public static function is_self( $attribution ) {
+		// Match by the plugin's own directory rather than a hardcoded slug, so
+		// a renamed plugin folder doesn't cause us to instrument (and double-
+		// wrap) our own callbacks.
+		if ( ! empty( $attribution['file'] ) && defined( 'SCRUTINIZER_DIR' ) ) {
+			$dir  = wp_normalize_path( SCRUTINIZER_DIR );
+			$file = wp_normalize_path( $attribution['file'] );
+			if ( '' !== $dir && 0 === strpos( $file, $dir ) ) {
+				return true;
+			}
+		}
 		return 'plugin' === $attribution['type'] && 'scrutinizer' === $attribution['slug'];
 	}
 
