@@ -32,7 +32,7 @@
 | M1 — Core Instrumentation | ✅ Complete |
 | M2 — Deep Mode & Timeline | ✅ Complete |
 | M2.5 — AI Agent API & Sharing | ✅ Complete |
-| M3 — Compare Workflow | ✅ Complete |
+| M3 — Compare Workflow | 🚧 Partial — compare UI shipped; statistical "Likely Regression" gate + route-fingerprint matching deferred |
 | M4 — Report Sharing | ✅ Complete (absorbed into M2.5) |
 | M5 — WP-CLI | ✅ Complete |
 | M5.5 — Data Lifecycle & Share Mgmt | ✅ Complete |
