@@ -227,6 +227,14 @@ class Instrumentor {
 				$ref = new \ReflectionFunction( $callback );
 			} elseif ( is_array( $callback ) && count( $callback ) >= 2 ) {
 				$ref = new \ReflectionMethod( $callback[0], $callback[1] );
+			} elseif ( is_string( $callback ) && false !== strpos( $callback, '::' ) ) {
+				// String static-method callback ('Class::method'). function_exists()
+				// is false for these, so without this branch they fell through to
+				// "no reference params" and got wrapped — which broke Wordfence's
+				// authAction( &$username, &$passwd ) on wp_authenticate (a live
+				// PHP "must be passed by reference" warning on the test host).
+				$parts = explode( '::', $callback, 2 );
+				$ref   = new \ReflectionMethod( $parts[0], $parts[1] );
 			} elseif ( is_string( $callback ) && function_exists( $callback ) ) {
 				$ref = new \ReflectionFunction( $callback );
 			} elseif ( is_object( $callback ) && method_exists( $callback, '__invoke' ) ) {
