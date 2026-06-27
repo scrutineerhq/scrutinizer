@@ -162,7 +162,7 @@ class RestApi {
 			array(
 				'endpoint'   => $endpoint,
 				'ip'         => self::get_client_ip(),
-				'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 200 ) : '',
+				'user_agent' => self::coarsen_user_agent( isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '' ),
 				'user_id'    => get_current_user_id(),
 				'created_at' => current_time( 'mysql' ),
 			),
@@ -244,8 +244,28 @@ class RestApi {
 	 * @return string First 16 hex chars of HMAC-SHA256 digest.
 	 */
 	private static function hash_ip( $ip ) {
-		$key = defined( 'AUTH_SALT' ) ? AUTH_SALT : 'scrutinizer-fallback-salt';
+		// wp_salt() always returns a per-site secret (generating and storing
+		// one if the wp-config constants are absent), so there is never a
+		// guessable hardcoded fallback that would make the hash reversible.
+		$key = wp_salt( 'auth' );
 		return substr( hash_hmac( 'sha256', $ip, $key ), 0, 16 );
+	}
+
+	/**
+	 * Reduce a User-Agent to a coarse family for the audit log.
+	 *
+	 * Strips version numbers so the client family stays legible for support
+	 * without storing a precisely fingerprintable string.
+	 *
+	 * @param string $ua Raw User-Agent.
+	 * @return string Coarsened User-Agent (max 100 chars).
+	 */
+	private static function coarsen_user_agent( $ua ) {
+		if ( '' === $ua ) {
+			return '';
+		}
+		$ua = preg_replace( '/\d+(\.\d+)*/', 'x', $ua );
+		return substr( $ua, 0, 100 );
 	}
 
 	/**
@@ -372,7 +392,10 @@ class RestApi {
 			'schema_version' => '1.0',
 			'name'           => 'Scrutineer',
 			'description'    => 'WordPress performance profiler — read-only API for site performance data.',
-			'version'        => defined( 'SCRUTINIZER_VERSION' ) ? SCRUTINIZER_VERSION : '1.0.0',
+			// Major series only — the public manifest should not disclose the
+			// exact patch version (aids targeted fingerprinting). API
+			// compatibility is conveyed by schema_version above.
+			'version'        => ( defined( 'SCRUTINIZER_VERSION' ) ? (int) SCRUTINIZER_VERSION : 1 ) . '.x',
 			'auth'           => array(
 				'type'        => 'http',
 				'scheme'      => 'basic',
