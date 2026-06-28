@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Scrutinizer Share Payload",
+  "description": "Contract between the plugin share builder (dashboard.js) and the relay viewer (worker.js). Both sides MUST validate against this schema. Field names match the profiler's native format — no renaming.",
+  "type": "object",
+  "required": ["summary", "request", "captured_at"],
+  "properties": {
+    "summary": {
+      "type": "object",
+      "properties": {
+        "duration_ns": { "type": "number" },
+        "memory_peak": { "type": "number" },
+        "memory_delta": { "type": "number" },
+        "query_count": { "type": "integer" },
+        "http_count": { "type": "integer" },
+        "source_count": { "type": "integer" },
+        "callback_count": { "type": "integer" }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["method", "url"],
+      "properties": {
+        "method": { "type": "string" },
+        "url": { "type": "string" },
+        "route_key": { "type": "string" },
+        "label": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": ["integer", "null"] }
+      }
+    },
+    "captured_at": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slug", "type"],
+        "properties": {
+          "slug": { "type": "string", "description": "Native field — never renamed to 'source'" },
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["plugin", "theme", "core", "muplugin", "dropin", "unknown"] },
+          "exclusive_ns": { "type": "number", "description": "Native nanoseconds — never pre-converted to _ms" },
+          "inclusive_ns": { "type": "number" },
+          "callback_count": { "type": "integer" }
+        }
+      }
+    },
+    "timeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "callback": { "type": "string" },
+          "tag": { "type": "string" },
+          "source": { "type": ["string", "integer"] },
+          "type": { "type": "string", "description": "Native field — never renamed to 'source_type'" },
+          "offset_ns": { "type": "number", "description": "Native nanoseconds — never pre-converted to _ms" },
+          "wall_ns": { "type": "number" },
+          "excl_ns": { "type": "number" },
+          "pct_start": { "type": "number" },
+          "pct_width": { "type": "number" },
+          "mem_after": { "type": "number" }
+        }
+      }
+    },
+    "phase_markers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "hook": { "type": "string" },
+          "name": { "type": "string" },
+          "label": { "type": "string" },
+          "offset_ns": { "type": "number", "description": "Native nanoseconds — never pre-converted to _ms" }
+        }
+      }
+    },
+    "trace": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "description": "Composite format: callback@hook:priority — never decomposed into separate fields" },
+          "exclusive_ns": { "type": "number", "description": "Native nanoseconds — never pre-converted to _ms" },
+          "inclusive_ns": { "type": "number" },
+          "exclusive_mem": { "type": "number" },
+          "inclusive_mem": { "type": "number" },
+          "start_ns": { "type": "number" },
+          "end_ns": { "type": "number" }
+        }
+      }
+    },
+    "queries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sql": { "type": "string" },
+          "time_ms": { "type": "number" },
+          "caller": { "type": "string" },
+          "offset_ns": { "type": "number", "description": "Native nanoseconds" },
+          "source": { "type": "string", "description": "Flattened from attribution.name — enrichment, not rename" },
+          "source_type": { "type": "string" }
+        }
+      }
+    },
+    "http_calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string" },
+          "method": { "type": "string" },
+          "status": { "type": "integer" },
+          "duration_ms": { "type": "number" },
+          "offset_ns": { "type": "number", "description": "Native nanoseconds" },
+          "caller": { "type": "string", "description": "Flattened from caller object" },
+          "source_type": { "type": "string" },
+          "source_name": { "type": "string" },
+          "is_error": { "type": "boolean" },
+          "blocking": { "type": "boolean" }
+        }
+      }
+    },
+    "autoloaded_options": {},
+    "enqueued_assets": {},
+    "diagnostics": {}
+  },
+  "additionalProperties": false
+}

@@ -5530,103 +5530,59 @@
 				captured_at: profile.captured_at
 			};
 
-			// Add selected sections
+			// Add selected sections — pass through raw profiler data without
+			// renaming fields. The relay viewer normalises _ns → _ms and
+			// handles both composite and split field shapes. Keeping the
+			// native format eliminates the field-translation bugs that
+			// kept surfacing when the two sides drifted apart.
+			//
+			// See tests/share-format.json for the contract both sides
+			// validate against.
 			if ( sections.indexOf( 'sources' ) !== -1 && profileData.sources ) {
 				shareData.sources = profileData.sources.map( function( src ) {
-					return {
-						source: src.slug || 'unknown',
-						name: src.name || src.slug || 'unknown',
-						type: src.type || 'unknown',
-						exclusive_ms: ( src.exclusive_ns || 0 ) / 1e6,
-						inclusive_ms: ( src.inclusive_ns || 0 ) / 1e6,
-						callback_count: src.callback_count || 0
-					};
+					// Strip per-callback detail (large, not needed for the
+					// viewer) but keep every top-level field intact.
+					var out = Object.assign( {}, src );
+					delete out.callbacks;
+					return out;
 				} );
 			}
 			if ( sections.indexOf( 'queries' ) !== -1 && profileData.queries ) {
 				shareData.queries = profileData.queries.map( function( q ) {
-					var qSrc = '';
-					var qSrcType = '';
+					// Flatten nested attribution into top-level fields the
+					// relay can use, but keep native names.
+					var out = {
+						sql: q.sql || '',
+						time_ms: q.time_ms || 0,
+						caller: q.caller || '',
+						offset_ns: q.offset_ns || 0
+					};
 					if ( q.attribution ) {
-						qSrc = q.attribution.name || q.attribution.slug || '';
-						qSrcType = q.attribution.type || 'unknown';
+						out.source = q.attribution.name || q.attribution.slug || '';
+						out.source_type = q.attribution.type || 'unknown';
 					} else if ( q.caller ) {
 						var inferred = inferSourceFromCaller( q.caller );
 						if ( inferred ) {
-							qSrc = inferred.name;
-							qSrcType = inferred.type;
+							out.source = inferred.name;
+							out.source_type = inferred.type;
 						}
 					}
-					return {
-						sql: q.sql || '',
-						time_ms: q.time_ms || 0,
-						source: qSrc,
-						source_type: qSrcType,
-						caller: q.caller || '',
-						offset_ms: ( q.offset_ns || 0 ) / 1e6
-					};
+					return out;
 				} );
 			}
 			if ( sections.indexOf( 'timeline' ) !== -1 && profileData.timeline ) {
-				shareData.timeline = profileData.timeline.map( function( t ) {
-					return {
-						callback: t.callback || '',
-						tag: t.tag || '',
-						source: t.source || '',
-						source_type: t.type || 'unknown',
-						offset_ms: ( t.offset_ns || 0 ) / 1e6,
-						duration_ms: ( t.wall_ns || t.excl_ns || 0 ) / 1e6,
-						pct_start: t.pct_start || 0,
-						pct_width: t.pct_width || 0,
-						mem_after: t.mem_after || 0
-					};
-				} );
+				shareData.timeline = profileData.timeline;
 			}
 			if ( sections.indexOf( 'timeline' ) !== -1 && profileData.phase_markers ) {
-				shareData.phase_markers = profileData.phase_markers.map( function( m ) {
-					var markerName = m.name || m.hook || '';
-					return {
-						hook: markerName,
-						label: m.label || markerName,
-						offset_ms: ( m.offset_ns || 0 ) / 1e6
-					};
-				} );
+				shareData.phase_markers = profileData.phase_markers;
 			}
 			if ( sections.indexOf( 'trace' ) !== -1 && profileData.trace ) {
-				// Build source lookup from sources data.
-				var shareSrcMap = {};
-				if ( profileData.sources ) {
-					for ( var si = 0; si < profileData.sources.length; si++ ) {
-						var shareSrc = profileData.sources[ si ];
-						var shareCbs = shareSrc.callbacks || [];
-						for ( var ci = 0; ci < shareCbs.length; ci++ ) {
-							shareSrcMap[ shareCbs[ ci ].callback ] = {
-								type: shareSrc.type || 'unknown',
-								name: shareSrc.name || shareSrc.slug || 'unknown'
-							};
-						}
-					}
-				}
-				shareData.trace = profileData.trace.map( function( t ) {
-					var tid      = t.id || '';
-					var atIdx    = tid.lastIndexOf( '@' );
-					var cbName   = atIdx > 0 ? tid.substring( 0, atIdx ) : tid;
-					var hookPart = atIdx > 0 ? tid.substring( atIdx + 1 ) : '';
-					var colonIdx = hookPart.lastIndexOf( ':' );
-					var hook     = colonIdx > 0 ? hookPart.substring( 0, colonIdx ) : hookPart;
-					var srcInfo  = shareSrcMap[ cbName ] || { type: 'unknown', name: 'unknown' };
-					return {
-						callback: cbName,
-						phase: hook,
-						source: srcInfo.name,
-						source_type: srcInfo.type,
-						exclusive_ms: ( t.exclusive_ns || 0 ) / 1e6,
-						inclusive_ms: ( t.inclusive_ns || 0 ) / 1e6
-					};
-				} );
+				shareData.trace = profileData.trace;
 			}
 			if ( sections.indexOf( 'http_calls' ) !== -1 && profileData.http_calls ) {
 				shareData.http_calls = profileData.http_calls.map( function( h ) {
+					// Flatten the nested caller object for the viewer but
+					// keep native field names.
 					var callerStr = '';
 					var sourceType = 'unknown';
 					var sourceName = '';
@@ -5644,14 +5600,12 @@
 						method: h.method || 'GET',
 						status: h.status || 0,
 						duration_ms: h.duration_ms || ( ( h.duration_ns || 0 ) / 1e6 ),
+						offset_ns: h.offset_ns || 0,
 						caller: callerStr,
 						source_type: sourceType,
 						source_name: sourceName,
 						is_error: h.is_error || false,
-						// Preserve the blocking flag — without it the shared viewer
-						// would default a fire-and-forget call to blocking.
-						blocking: h.blocking !== false,
-						offset_ms: ( h.offset_ns || 0 ) / 1e6
+						blocking: h.blocking !== false
 					};
 				} );
 			}

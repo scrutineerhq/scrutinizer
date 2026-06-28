@@ -1,0 +1,95 @@
+{
+  "summary": {
+    "duration_ns": 245000000,
+    "memory_peak": 45482598,
+    "memory_delta": 19611648,
+    "query_count": 145,
+    "http_count": 1,
+    "source_count": 11,
+    "callback_count": 8565
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://example.com/shop/",
+    "route_key": "archive",
+    "label": "WooCommerce Shop",
+    "role": "admin",
+    "status": 200
+  },
+  "captured_at": "2026-06-28 14:00:00",
+  "sources": [
+    {
+      "slug": "woocommerce",
+      "name": "WooCommerce",
+      "type": "plugin",
+      "exclusive_ns": 36015000,
+      "inclusive_ns": 48020000,
+      "callback_count": 312
+    },
+    {
+      "slug": "wordpress",
+      "name": "WordPress",
+      "type": "core",
+      "exclusive_ns": 75735000,
+      "inclusive_ns": 75735000,
+      "callback_count": 1842
+    }
+  ],
+  "timeline": [
+    {
+      "callback": "wc_template_redirect",
+      "tag": "template_redirect",
+      "source": 0,
+      "type": "plugin",
+      "offset_ns": 82000000,
+      "wall_ns": 5200000,
+      "excl_ns": 5200000,
+      "pct_start": 33.47,
+      "pct_width": 2.12,
+      "mem_after": 28311552
+    }
+  ],
+  "phase_markers": [
+    {
+      "hook": "init",
+      "name": "init",
+      "label": "init",
+      "offset_ns": 15000000
+    }
+  ],
+  "trace": [
+    {
+      "id": "wc_template_redirect@template_redirect:10",
+      "exclusive_ns": 5200000,
+      "inclusive_ns": 5200000,
+      "exclusive_mem": 1024,
+      "inclusive_mem": 1024,
+      "start_ns": 369017640862517,
+      "end_ns": 369017646062517
+    }
+  ],
+  "queries": [
+    {
+      "sql": "SELECT option_value FROM wp_options WHERE option_name = 'siteurl' LIMIT 1",
+      "time_ms": 0.42,
+      "caller": "get_option",
+      "offset_ns": 2500000,
+      "source": "WordPress",
+      "source_type": "core"
+    }
+  ],
+  "http_calls": [
+    {
+      "url": "https://httpbin.org/get?scrutinizer=test",
+      "method": "GET",
+      "status": 200,
+      "duration_ms": 393.12,
+      "offset_ns": 120000000,
+      "caller": "demo_hooks_http_call",
+      "source_type": "plugin",
+      "source_name": "demo-hooks",
+      "is_error": false,
+      "blocking": true
+    }
+  ]
+}
