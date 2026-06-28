@@ -134,6 +134,52 @@
     var queries = pd.queries || [];
     var memSamples = pd.memory_samples || null;
 
+    // Normalize shared-report format: share payloads use _ms suffixes while
+    // the plugin dashboard uses _ns. Convert _ms → _ns in-place so the rest
+    // of the pipeline works unchanged. Detection: if the first timeline entry
+    // has offset_ms but no offset_ns, assume shared format.
+    var isMs = timeline.length > 0 && timeline[0].offset_ms != null && timeline[0].offset_ns == null;
+    if (isMs) {
+      for (var ni = 0; ni < timeline.length; ni++) {
+        timeline[ni].offset_ns = (timeline[ni].offset_ms || 0) * 1e6;
+        timeline[ni].excl_ns = (timeline[ni].duration_ms || 0) * 1e6;
+        timeline[ni].wall_ns = (timeline[ni].duration_ms || 0) * 1e6;
+      }
+      for (var mi2 = 0; mi2 < markers.length; mi2++) {
+        if (markers[mi2].offset_ms != null && markers[mi2].offset_ns == null) {
+          markers[mi2].offset_ns = (markers[mi2].offset_ms || 0) * 1e6;
+        }
+      }
+      for (var si = 0; si < rawSources.length; si++) {
+        if (rawSources[si].exclusive_ms != null && rawSources[si].exclusive_ns == null) {
+          rawSources[si].exclusive_ns = (rawSources[si].exclusive_ms || 0) * 1e6;
+        }
+        if (rawSources[si].inclusive_ms != null && rawSources[si].inclusive_ns == null) {
+          rawSources[si].inclusive_ns = (rawSources[si].inclusive_ms || 0) * 1e6;
+        }
+      }
+      for (var hi = 0; hi < httpCalls.length; hi++) {
+        if (httpCalls[hi].offset_ms != null && httpCalls[hi].offset_ns == null) {
+          httpCalls[hi].offset_ns = (httpCalls[hi].offset_ms || 0) * 1e6;
+        }
+        if (httpCalls[hi].duration_ms != null && httpCalls[hi].duration_ns == null) {
+          httpCalls[hi].duration_ns = (httpCalls[hi].duration_ms || 0) * 1e6;
+        }
+      }
+      for (var qi = 0; qi < queries.length; qi++) {
+        if (queries[qi].offset_ms != null && queries[qi].offset_ns == null) {
+          queries[qi].offset_ns = (queries[qi].offset_ms || 0) * 1e6;
+        }
+      }
+      if (memSamples) {
+        for (var msi = 0; msi < memSamples.length; msi++) {
+          if (memSamples[msi].offset_ms != null && memSamples[msi].offset_ns == null) {
+            memSamples[msi].offset_ns = (memSamples[msi].offset_ms || 0) * 1e6;
+          }
+        }
+      }
+    }
+
     var T = summary.duration_ms || (summary.duration_ns ? summary.duration_ns / 1e6 : 0);
     if (!T) {
       // best-effort fallback: last timeline offset
