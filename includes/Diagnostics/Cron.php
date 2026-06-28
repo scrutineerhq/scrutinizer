@@ -36,7 +36,7 @@ class Cron {
 		$now        = time();
 
 		$events   = array();
-		$hooks    = array();
+
 		$warnings = array();
 
 		if ( ! is_array( $cron_array ) ) {
@@ -82,12 +82,6 @@ class Cron {
 
 					$events[] = $entry;
 
-					// Track hook occurrences for duplicate detection.
-					if ( ! isset( $hooks[ $hook ] ) ) {
-						$hooks[ $hook ] = 0;
-					}
-					++$hooks[ $hook ];
-
 					if ( $is_overdue && $schedule ) {
 						$warnings[] = array(
 							'type'    => 'overdue_recurring',
@@ -104,17 +98,58 @@ class Cron {
 			}
 		}
 
-		// Detect duplicate hooks (same hook scheduled multiple times).
-		foreach ( $hooks as $hook => $count ) {
-			if ( $count > 1 ) {
+		// Detect duplicate hooks — same hook + same args + same schedule
+		// queued multiple times at suspiciously close timestamps. Hooks
+		// scheduled days apart with different args are intentional (e.g.
+		// staggered scans, batched workers).
+		$hook_groups = array();
+		foreach ( $events as $ev ) {
+			$group_key = $ev['hook'] . '|' . $ev['args_hash'] . '|' . $ev['schedule'];
+			if ( ! isset( $hook_groups[ $group_key ] ) ) {
+				$hook_groups[ $group_key ] = array();
+			}
+			$hook_groups[ $group_key ][] = $ev['timestamp'];
+		}
+
+		foreach ( $hook_groups as $group_key => $timestamps ) {
+			if ( count( $timestamps ) < 2 ) {
+				continue;
+			}
+
+			sort( $timestamps );
+			$parts    = explode( '|', $group_key );
+			$hook     = $parts[0];
+			$schedule = $parts[2];
+
+			// For recurring events, "duplicate" means multiple instances
+			// closer than 2× the interval. For one-shot events, closer
+			// than 10 minutes.
+			$interval = 0;
+			foreach ( $events as $ev ) {
+				if ( $ev['hook'] === $hook && $ev['interval'] > 0 ) {
+					$interval = $ev['interval'];
+					break;
+				}
+			}
+			$threshold = $interval > 0 ? $interval * 2 : 600;
+
+			$close_count = 0;
+			for ( $ci = 1; $ci < count( $timestamps ); $ci++ ) {
+				if ( ( $timestamps[ $ci ] - $timestamps[ $ci - 1 ] ) < $threshold ) {
+					++$close_count;
+				}
+			}
+
+			if ( $close_count > 0 ) {
 				$warnings[] = array(
 					'type'    => 'duplicate',
 					'hook'    => $hook,
-					'count'   => $count,
+					'count'   => count( $timestamps ),
 					'message' => sprintf(
-						'Hook "%s" is scheduled %d times (possible duplicate)',
+						/* translators: 1: hook name, 2: number of times scheduled. */
+						'Hook "%1$s" is scheduled %2$d times with the same args and schedule (likely duplicate)',
 						$hook,
-						$count
+						count( $timestamps )
 					),
 				);
 			}
