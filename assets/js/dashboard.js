@@ -997,7 +997,7 @@
 		html += __( 'Only capture successful requests (HTTP 200)', 'scrutinizer' ) + '</label>';
 		html += '</div>';
 
-		html += '<p class="scrutinizer-overhead-note">' + __( 'Non-profiled requests add about 2 ms or less. A profiled request brings up full hook instrumentation and trace storage — around 250 ms in our benchmarks, though it varies widely with your plugins, hardware, and load. Unattributed time in each profile includes this cost.', 'scrutinizer' ) + '</p>';
+		html += '<p class="scrutinizer-overhead-note">' + __( 'Non-profiled requests add about 2 ms or less. A profiled request brings up full hook instrumentation and trace storage - around 250 ms in our benchmarks, though it varies widely with your plugins, hardware, and load. Unattributed time in each profile includes this cost.', 'scrutinizer' ) + '</p>';
 		if ( currentRate >= 50 ) {
 			html += '<p class="scrutinizer-overhead-note" style="color:#d63638;font-weight:500;">' + __( '\u26a0 High capture rate. Each profile generates 2\u201310 MB of trace data. Not recommended for production sites or servers with limited disk/memory.', 'scrutinizer' ) + '</p>';
 		}
@@ -1073,7 +1073,7 @@
 		} else {
 			html += '<span class="scrutinizer-qp-badge blocked">wp-config.php</span> ';
 			// translators: %s is the SAVEQUERIES constant value (e.g. false).
-			html += sprintf( __( 'SAVEQUERIES is set to %s — Scrutineer can\'t override a defined constant.', 'scrutinizer' ), '<code>false</code>' );
+			html += sprintf( __( 'SAVEQUERIES is set to %s - Scrutineer can\'t override a defined constant.', 'scrutinizer' ), '<code>false</code>' );
 		}
 		html += '</p>';
 
@@ -1084,12 +1084,12 @@
 
 		if ( canToggle ) {
 			html += '<p>' + __( 'Sets PHP\'s <code>SAVEQUERIES</code> constant so WordPress logs every query with its execution time. Typical overhead is 1\u20132% per request.', 'scrutinizer' ) + '</p>';
-			html += '<p>' + __( 'Queries that run before plugin load (options autoload, core bootstrap) aren\'t captured \u2014 usually less than 10% of total. For full coverage from boot, add to wp-config.php:', 'scrutinizer' ) + '</p>';
+			html += '<p>' + __( 'Queries that run before plugin load (options autoload, core bootstrap) aren\'t captured - usually less than 10% of total. For full coverage from boot, add to wp-config.php:', 'scrutinizer' ) + '</p>';
 			html += '<code class="scrutinizer-qp-code">define( \'SAVEQUERIES\', true );</code>';
 		} else if ( isOn ) {
 			html += '<p>' + __( '<code>SAVEQUERIES</code> is defined as <code>true</code> before plugins load, so every query from boot is captured. To let Scrutineer manage this toggle instead, remove the <code>define()</code> line from wp-config.php.', 'scrutinizer' ) + '</p>';
 		} else {
-			html += '<p>' + __( '<code>define( \'SAVEQUERIES\', false )</code> in wp-config.php prevents redefinition \u2014 PHP constants are immutable once set.', 'scrutinizer' ) + '</p>';
+			html += '<p>' + __( '<code>define( \'SAVEQUERIES\', false )</code> in wp-config.php prevents redefinition - PHP constants are immutable once set.', 'scrutinizer' ) + '</p>';
 			html += '<p>' + __( 'To enable: change <code>false</code> to <code>true</code>, or remove the line entirely to let Scrutineer manage it via this toggle.', 'scrutinizer' ) + '</p>';
 		}
 
@@ -1136,7 +1136,7 @@
 		html += '<div class="scrutinizer-qp-detail-content" style="display:none;">';
 		html += '<p>' + __( 'Enabling this writes a small must-use plugin to your site:', 'scrutinizer' ) + '</p>';
 		html += '<code class="scrutinizer-qp-code">' + esc( eb.path || 'wp-content/mu-plugins/scrutinizer-early.php' ) + '</code>';
-		html += '<p>' + __( 'It records a timestamp at the very start of each request so the pre-plugin bootstrap can be timed — nothing else. Remove it anytime with this toggle, or via WP-CLI: wp scrutinizer mu-plugin remove.', 'scrutinizer' ) + '</p>';
+		html += '<p>' + __( 'It records a timestamp at the very start of each request so the pre-plugin bootstrap can be timed - nothing else. Remove it anytime with this toggle, or via WP-CLI: wp scrutinizer mu-plugin remove.', 'scrutinizer' ) + '</p>';
 		html += '</div></div>';
 		html += '</div>';
 
@@ -1151,7 +1151,7 @@
 			return;
 		}
 		var html = '<div class="scrutinizer-eb-banner notice notice-info">';
-		html += '<p>' + esc( __( 'Early-boot timing is off. Enable it to measure time spent before plugins load — it adds a small must-use plugin you can remove anytime.', 'scrutinizer' ) ) + '</p>';
+		html += '<p>' + esc( __( 'Early-boot timing is off. Enable it to measure time spent before plugins load - it adds a small must-use plugin you can remove anytime.', 'scrutinizer' ) ) + '</p>';
 		html += '<p>';
 		html += '<button type="button" class="button button-primary" id="scrutinizer-eb-banner-enable">' + esc( __( 'Enable', 'scrutinizer' ) ) + '</button> ';
 		html += '<button type="button" class="button" id="scrutinizer-eb-banner-dismiss">' + esc( __( 'Dismiss', 'scrutinizer' ) ) + '</button>';
@@ -1207,13 +1207,13 @@
 		html += '</div>';
 
 		html += '<p class="scrutinizer-qp-desc">';
-		html += __( 'Capture source totals only — skip the timeline and per-callback trace. Profiles are roughly 95% smaller, making always-on sampling safe on busy production sites.', 'scrutinizer' );
+		html += __( 'Capture source totals only - skip the timeline and per-callback trace. Profiles are roughly 95% smaller, making always-on sampling safe on busy production sites.', 'scrutinizer' );
 		html += '</p>';
 
 		html += '<div class="scrutinizer-qp-detail">';
 		html += '<a href="#" class="scrutinizer-qp-more">' + __( 'Details', 'scrutinizer' ) + '</a>';
 		html += '<div class="scrutinizer-qp-detail-content" style="display:none;">';
-		html += '<p>' + __( 'You still get the full "who owns the time" breakdown — sources, queries, HTTP calls, subsystems. The Timeline and Trace tabs are skipped to keep profiles small. For a deep dive on a specific request, turn this off and capture once.', 'scrutinizer' ) + '</p>';
+		html += '<p>' + __( 'You still get the full "who owns the time" breakdown - sources, queries, HTTP calls, subsystems. The Timeline and Trace tabs are skipped to keep profiles small. For a deep dive on a specific request, turn this off and capture once.', 'scrutinizer' ) + '</p>';
 		html += '</div></div>';
 		html += '</div>';
 
@@ -1456,7 +1456,7 @@
 				} else {
 					// Open in new tab so the dashboard stays visible.
 					window.open( response.data.activation_url, '_blank' );
-					showNotice( __( 'Profiling started — measuring in the new tab. Results will appear here.', 'scrutinizer' ), 'success' );
+					showNotice( __( 'Profiling started - measuring in the new tab. Results will appear here.', 'scrutinizer' ), 'success' );
 				}
 				// Start polling for results.
 				showStopButton();
@@ -2078,7 +2078,7 @@
 	function lightweightTabNote() {
 		return '<div style="padding:2rem;text-align:center;color:#646970;">' +
 			'<p style="font-size:14px;max-width:520px;margin:0 auto;line-height:1.6;">' +
-			esc( __( 'Captured in lightweight mode — the timeline and per-callback trace weren\'t recorded, to keep the profile small. The Sources, Queries, and HTTP tabs have the full breakdown. Turn off Lightweight Mode in Settings and capture again for the timeline and trace.', 'scrutinizer' ) ) +
+			esc( __( 'Captured in lightweight mode - the timeline and per-callback trace weren\'t recorded, to keep the profile small. The Sources, Queries, and HTTP tabs have the full breakdown. Turn off Lightweight Mode in Settings and capture again for the timeline and trace.', 'scrutinizer' ) ) +
 			'</p></div>';
 	}
 
@@ -2405,8 +2405,8 @@
 		}
 
 		var html = '<div class="scrutinizer-core-subsystems">';
-		html += '<h4>' + esc( __( 'WordPress Core — subsystem breakdown', 'scrutinizer' ) ) + '</h4>';
-		html += '<p class="description">' + esc( __( 'Where the time inside the single "core" bucket goes. Aggregate only — labels and totals, never file paths.', 'scrutinizer' ) ) + '</p>';
+		html += '<h4>' + esc( __( 'WordPress Core - subsystem breakdown', 'scrutinizer' ) ) + '</h4>';
+		html += '<p class="description">' + esc( __( 'Where the time inside the single "core" bucket goes. Aggregate only - labels and totals, never file paths.', 'scrutinizer' ) ) + '</p>';
 
 		html += '<div class="scrutinizer-source-bar">';
 		for ( i = 0; i < subsystems.length; i++ ) {
@@ -2457,7 +2457,7 @@
 			} else if ( ! qp.managed && ! qp.active ) {
 				msg = __( 'SAVEQUERIES is disabled in wp-config.php. Enable it to capture query timing.', 'scrutinizer' );
 			} else {
-				msg = __( 'No query data — this profile was captured before query profiling was enabled.', 'scrutinizer' );
+				msg = __( 'No query data - this profile was captured before query profiling was enabled.', 'scrutinizer' );
 			}
 			return '<p class="scrutinizer-empty">' + msg + '</p>';
 		}
@@ -2891,9 +2891,9 @@
 		// translators: 1: a count label, 2: a total (time or size).
 		html += sprintf( __( '%1$s totaling %2$s', 'scrutinizer' ), optionCountLabel, '<strong>' + formatBytes( totalSize ) + '</strong>' );
 		if ( totalSize > 1048576 ) { // > 1 MB.
-			html += ' <span class="scrutinizer-options-warning">' + __( '⚠ Over 1 MB — this adds latency to every request', 'scrutinizer' ) + '</span>';
+			html += ' <span class="scrutinizer-options-warning">' + __( '⚠ Over 1 MB - this adds latency to every request', 'scrutinizer' ) + '</span>';
 		} else if ( totalSize > 524288 ) { // > 512 KB.
-			html += ' <span class="scrutinizer-options-caution">' + __( '⚡ Over 512 KB — worth reviewing', 'scrutinizer' ) + '</span>';
+			html += ' <span class="scrutinizer-options-caution">' + __( '⚡ Over 512 KB - worth reviewing', 'scrutinizer' ) + '</span>';
 		}
 		html += '</div>';
 
@@ -2980,7 +2980,7 @@
 		};
 		var html = '<div class="scrutinizer-dev-signals">';
 		html += '<h4>' + esc( __( 'Developer signals', 'scrutinizer' ) ) + '</h4>';
-		html += '<p class="description">' + esc( __( 'Deprecations and _doing_it_wrong() notices triggered during this request, and which source triggered each. Counts only — no argument values.', 'scrutinizer' ) ) + '</p>';
+		html += '<p class="description">' + esc( __( 'Deprecations and _doing_it_wrong() notices triggered during this request, and which source triggered each. Counts only - no argument values.', 'scrutinizer' ) ) + '</p>';
 		html += '<table class="scrutinizer-subsystem-table"><thead><tr>' +
 			'<th>' + esc( __( 'Signal', 'scrutinizer' ) ) + '</th>' +
 			'<th>' + esc( __( 'API', 'scrutinizer' ) ) + '</th>' +
@@ -3512,8 +3512,8 @@
 			html += '</td>';
 			html += '<td class="scrutinizer-trace-hook"><code>' + esc( e._hook ) + '</code></td>';
 			html += '<td><span class="scrutinizer-source-dot" style="background:' + color + '"></span>' + esc( e.source_name ) + '</td>';
-			html += '<td class="scrutinizer-trace-num">' + ( e.query_count > 0 ? e.query_count : '<span class="scrutinizer-muted">\u2014</span>' ) + '</td>';
-			html += '<td class="scrutinizer-trace-num">' + ( e.http_count > 0 ? e.http_count : '<span class="scrutinizer-muted">\u2014</span>' ) + '</td>';
+			html += '<td class="scrutinizer-trace-num">' + ( e.query_count > 0 ? e.query_count : '<span class="scrutinizer-muted">-</span>' ) + '</td>';
+			html += '<td class="scrutinizer-trace-num">' + ( e.http_count > 0 ? e.http_count : '<span class="scrutinizer-muted">-</span>' ) + '</td>';
 			html += '</tr>';
 		}
 
@@ -4864,7 +4864,7 @@
 		html += '<button type="button" class="button scrutinizer-btn-danger" id="scrutinizer-revoke-api-key" style="display:none;">';
 		html += '<span class="dashicons dashicons-dismiss"></span> ' + __( 'Revoke Access', 'scrutinizer' ) + '</button>';
 		html += '</div>';
-		html += '<p class="scrutinizer-privacy-advisory">' + __( 'This prompt includes your site URL and a short-lived credential. Paste it into a private AI conversation \u2014 not a public or shared chat.', 'scrutinizer' ) + '</p>';
+		html += '<p class="scrutinizer-privacy-advisory">' + __( 'This prompt includes your site URL and a short-lived credential. Paste it into a private AI conversation - not a public or shared chat.', 'scrutinizer' ) + '</p>';
 		html += '<div id="scrutinizer-api-key-result" class="scrutinizer-api-result" style="display:none;"></div>';
 		html += '</div>';
 
@@ -4873,7 +4873,7 @@
 		html += '<h3 class="scrutinizer-api-heading"><span class="dashicons dashicons-admin-tools"></span> ' + __( 'Diagnostics Sharing', 'scrutinizer' ) + '</h3>';
 		// translators: %s is the diagnostics endpoint path.
 		html += '<p class="scrutinizer-api-desc">' + sprintf( __( 'Choose which server environment details to include when an agent reads %s.', 'scrutinizer' ), '<code>/v1/diagnostics</code>' ) + ' ';
-		html += __( 'These fields are opt-in — nothing is shared unless you check it.', 'scrutinizer' ) + '</p>';
+		html += __( 'These fields are opt-in - nothing is shared unless you check it.', 'scrutinizer' ) + '</p>';
 		html += '<div class="scrutinizer-diagnostics-checkboxes">';
 
 		var fieldKeys = Object.keys( optInFields );
@@ -4900,7 +4900,7 @@
 		html += '<table class="scrutinizer-profile-table scrutinizer-api-endpoints widefat">';
 		html += '<thead><tr><th>' + __( 'Method', 'scrutinizer' ) + '</th><th>' + __( 'Endpoint', 'scrutinizer' ) + '</th><th>' + __( 'Description', 'scrutinizer' ) + '</th></tr></thead>';
 		html += '<tbody>';
-		html += '<tr><td><code>GET</code></td><td><code>/v1/prompt</code></td><td>' + __( 'System prompt (text/plain) \u2014 the API contract', 'scrutinizer' ) + '</td></tr>';
+		html += '<tr><td><code>GET</code></td><td><code>/v1/prompt</code></td><td>' + __( 'System prompt (text/plain) - the API contract', 'scrutinizer' ) + '</td></tr>';
 		html += '<tr><td><code>GET</code></td><td><code>/v1/diagnostics</code></td><td>' + __( 'Server environment details (opt-in fields only)', 'scrutinizer' ) + '</td></tr>';
 		html += '<tr><td><code>GET</code></td><td><code>/v1/routes</code></td><td>' + __( 'All profiled routes with summary statistics', 'scrutinizer' ) + '</td></tr>';
 		html += '<tr><td><code>GET</code></td><td><code>/v1/profile/{id}</code></td><td>' + __( 'Full profile detail for one request', 'scrutinizer' ) + '</td></tr>';
@@ -4916,12 +4916,12 @@
 		// --- Shared Reports section ---
 		html += '<div class="scrutinizer-api-section">';
 		html += '<h3 class="scrutinizer-api-heading"><span class="dashicons dashicons-lock"></span> ' + __( 'Shared Reports', 'scrutinizer' ) + '</h3>';
-		html += '<p class="scrutinizer-api-desc">' + __( 'Encrypted, self-destructing links you\u2019ve shared. Data is encrypted in your browser before upload &mdash; the relay server never sees your report contents.', 'scrutinizer' ) + '</p>';
+		html += '<p class="scrutinizer-api-desc">' + __( 'Encrypted, self-destructing links you\u2019ve shared. Data is encrypted in your browser before upload - the relay server never sees your report contents.', 'scrutinizer' ) + '</p>';
 		// translators: 1: the "History" tab label, 2: the "Share" button label.
 		html += '<p class="scrutinizer-api-desc">' + sprintf( __( 'To share: open a profile from the %1$s tab, then click %2$s in the toolbar.', 'scrutinizer' ), '<strong>' + __( 'History', 'scrutinizer' ) + '</strong>', '<strong>' + __( 'Share', 'scrutinizer' ) + '</strong>' ) + '</p>';
 		html += '<div id="scrutinizer-shared-reports-content"><p class="scrutinizer-empty">' + __( 'Loading\u2026', 'scrutinizer' ) + '</p></div>';
 		// translators: %s is the relay service name.
-		html += '<p class="scrutinizer-api-desc" style="color:#50575e;font-size:12px;">' + sprintf( __( 'Powered by %s &mdash; zero-knowledge encrypted relay.', 'scrutinizer' ), '<code>scrutinizer.dev</code>' ) + '</p>';
+		html += '<p class="scrutinizer-api-desc" style="color:#50575e;font-size:12px;">' + sprintf( __( 'Powered by %s - zero-knowledge encrypted relay.', 'scrutinizer' ), '<code>scrutinizer.dev</code>' ) + '</p>';
 		html += '</div>';
 
 		// --- Audit Log section ---

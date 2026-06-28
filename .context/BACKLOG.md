@@ -83,5 +83,3 @@ Serve people troubleshooting **WordPress core itself** (not plugins) by breaking
 - [ ] **Cross-build comparison.** *Skipped (per product call).* Compare the same route across WP builds / PHP versions. **Design note for later:** build/version is a *comparison axis*, NOT a fingerprint dimension — folding it into the match key would stop trunk and 6.7 profiles from matching.
 
 Deliberately **excluded**: object-cache instrumentation (D42), any query-value/content inspection (D41).
-
-Deliberately **excluded**: object-cache instrumentation (D42), any query-value/content inspection (D41).

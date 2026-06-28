@@ -615,16 +615,6 @@ class Storage {
 	/**
 	 * Normalize a URL into a route grouping key.
 	 *
-	 * Strips host and query string so that e.g. /wp-admin/edit.php?post_type=page
-	 * and /wp-admin/edit.php?post_type=post both group under GET:/wp-admin/edit.php.
-	 *
-	 * @param string $method  HTTP method.
-	 * @param string $url     Full request URL.
-	 * @return string  Normalized key like "GET:/wp-admin/edit.php".
-	 */
-	/**
-	 * Normalize a URL into a route grouping key.
-	 *
 	 * For admin-ajax.php requests, the AJAX action is appended so profiles
 	 * group by action: POST:ajax:heartbeat instead of one blob.
 	 *
