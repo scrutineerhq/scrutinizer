@@ -3370,7 +3370,7 @@ details.scrutinizer-term > .scrutinizer-term-explain {
 	outline: none;
 }
 
-.scrutinizer-save-filters {
+.scrutinizer-filter-controls .scrutinizer-save-filters {
 	display: block;
 	margin-top: 8px;
 }
