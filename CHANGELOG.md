@@ -5,6 +5,15 @@ All notable changes to Scrutinizer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-28
+
+Production-safe capture and cron visibility.
+
+### Added
+
+- **Lightweight capture mode** (Settings → Lightweight Mode) — records source/attribution totals only, skipping the timeline and the per-callback trace (together ~95% of stored profile size). Profiles drop from several MB to ~200 KB, so always-on background sampling is safe on busy production sites. The full source / queries / HTTP / subsystem breakdown is kept; the Timeline and Trace tabs (and the shared-report viewer) note when a capture was lightweight.
+- **Cron profiling** (Settings → Profile Cron Jobs) — opt in to sample WP-Cron runs (normally excluded), so the Cron tab shows measured per-hook exclusive cost from real runs, with the worst run flagged. Cron hooks are snapshotted at request start so single events are attributed correctly.
+
 ## [1.1.0] - 2026-06-27
 
 This release focuses on trust — opt-in defaults and honest disclosure — alongside a redesigned timeline and deeper attribution.
