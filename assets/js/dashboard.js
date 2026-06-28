@@ -997,7 +997,7 @@
 		html += __( 'Only capture successful requests (HTTP 200)', 'scrutinizer' ) + '</label>';
 		html += '</div>';
 
-		html += '<p class="scrutinizer-overhead-note">' + __( 'Non-profiled requests add about 2 ms or less. A profiled request brings up full hook instrumentation and trace storage - around 250 ms in our benchmarks, though it varies widely with your plugins, hardware, and load. Unattributed time in each profile includes this cost.', 'scrutinizer' ) + '</p>';
+		html += '<p class="scrutinizer-overhead-note">' + __( 'Non-profiled requests add a few milliseconds. A profiled request brings up full hook instrumentation and trace storage - roughly 100-200 ms in our benchmarks (closer to 100 ms in Lightweight Mode, closer to 200 ms with the full trace), though it varies widely with your plugins, hardware, and load. Unattributed time in each profile includes this cost.', 'scrutinizer' ) + '</p>';
 		if ( currentRate >= 50 ) {
 			html += '<p class="scrutinizer-overhead-note" style="color:#d63638;font-weight:500;">' + __( '\u26a0 High capture rate. Each profile generates 2\u201310 MB of trace data. Not recommended for production sites or servers with limited disk/memory.', 'scrutinizer' ) + '</p>';
 		}
