@@ -938,16 +938,18 @@ class Ajax {
 			);
 		}
 
-		// Build the clipboard prompt: bake the full prompt content inline
-		// so the agent has the API contract without needing to fetch it.
-		// The prompt endpoint stays authenticated to prevent fingerprinting.
-		$username       = wp_get_current_user()->user_login;
-		$prompt_content = \Scrutinizer\Api\Prompt::build();
-		$prompt         = sprintf(
-			"The following is the Scrutineer Performance Diagnostics API contract for my WordPress site. Use these credentials to authenticate all API calls:\n\nUsername: %s\nPassword: %s\n\n---\n\n%s",
+		// Build the clipboard prompt: short bootstrap that points the agent
+		// at the self-documenting /v1/prompt endpoint. The agent reads the
+		// full API contract from there — no need to inline it.
+		$username = wp_get_current_user()->user_login;
+		$site_url = rest_url( 'scrutinizer/v1/prompt' );
+		$prompt   = sprintf(
+			"Help me understand my WordPress site's performance.\n\nUse these credentials to authenticate all API calls:\n\nUsername: %s\nPassword: %s\n\nFirst, start by reading the Scrutinizer API guide here:\ncurl -u \"%s:%s\" %s",
 			$username,
 			$result['password'],
-			$prompt_content
+			$username,
+			$result['password'],
+			$site_url
 		);
 
 		$ttl_hours = round( $result['ttl'] / 3600, 1 );
