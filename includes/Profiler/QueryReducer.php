@@ -70,7 +70,7 @@ class QueryReducer {
 		// Read paths re-reduce defensively (D26), so reduce() must be a no-op on
 		// its own output. A known verb followed only by a comma-separated table
 		// list is already shape-only (no values), so passing it through is safe.
-		if ( preg_match( '/^(SELECT|INSERT|UPDATE|DELETE|REPLACE|SHOW|CREATE|DROP|ALTER|TRUNCATE)(\s+[A-Za-z0-9_$]+(\s*,\s*[A-Za-z0-9_$]+)*)?$/', $sql ) ) {
+		if ( preg_match( '/^(SELECT|INSERT|UPDATE|DELETE|REPLACE|SHOW|CREATE|DROP|ALTER|TRUNCATE|DESCRIBE|DESC|EXPLAIN)(\s+[A-Za-z0-9_$]+(\s*,\s*[A-Za-z0-9_$]+)*)?$/', $sql ) ) {
 			return $sql;
 		}
 
@@ -90,6 +90,20 @@ class QueryReducer {
 				}
 			}
 			return 'SHOW';
+		}
+
+		// DESCRIBE / DESC / EXPLAIN: table name (or DML verb) follows directly.
+		if ( 'DESCRIBE' === $verb || 'DESC' === $verb || 'EXPLAIN' === $verb ) {
+			if ( isset( $tokens[1] ) ) {
+				$next_upper = strtoupper( $tokens[1] );
+				// EXPLAIN SELECT ... — reduce to "EXPLAIN SELECT" (no tables from the inner query).
+				if ( in_array( $next_upper, array( 'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'REPLACE', 'WITH' ), true ) ) {
+					return $verb . ' ' . $next_upper;
+				}
+				// DESCRIBE table / DESC table / EXPLAIN table — next token is the table.
+				return $verb . ' ' . self::strip_quotes( $tokens[1] );
+			}
+			return $verb;
 		}
 
 		// CTE handling: WITH name AS (...), name2 AS (...) SELECT ...
@@ -597,6 +611,9 @@ class QueryReducer {
 				'CHECK',
 				'REPAIR',
 				'TRUNCATE',
+				'DESCRIBE',
+				'DESC',
+				'EXPLAIN',
 				// SELECT ... INTO OUTFILE/DUMPFILE '<path>' — the keyword after
 				// INTO is not a table; skip it so the path is never treated as
 				// one.
