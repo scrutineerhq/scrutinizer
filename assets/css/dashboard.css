@@ -2221,15 +2221,41 @@
 	font-size: 12px;
 }
 
+.scrutinizer-cron-section {
+	margin-top: 20px;
+}
+
+.scrutinizer-cron-section-heading {
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
+	padding: 8px 0;
+	list-style: none;
+}
+
+.scrutinizer-cron-section-heading::-webkit-details-marker {
+	display: none;
+}
+
+.scrutinizer-cron-section-heading::before {
+	content: '▸ ';
+	display: inline;
+	font-size: 11px;
+}
+
+.scrutinizer-cron-section[open] > .scrutinizer-cron-section-heading::before {
+	content: '▾ ';
+}
+
 .scrutinizer-cron-schedules {
 	margin-top: 16px;
 }
 
-.scrutinizer-cron-schedules summary {
-	cursor: pointer;
-	font-size: 12px;
-	color: #50575e;
-	padding: 6px 0;
+.scrutinizer-cron-schedules.scrutinizer-cron-section summary {
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
 }
 
 .scrutinizer-cron-schedule-table {

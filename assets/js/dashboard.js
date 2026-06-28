@@ -4168,6 +4168,11 @@
 				esc( __( 'Per-hook cost is measured from profiled cron runs. Turn on "Profile cron jobs" in Settings to start measuring.', 'scrutinizer' ) ) + '</p>';
 		}
 
+		// ── Scheduled Hooks ──────────────────────────────────────────
+		html += '<details class="scrutinizer-cron-section" open>';
+		html += '<summary class="scrutinizer-cron-section-heading">' + __( 'Scheduled Hooks', 'scrutinizer' );
+		html += ' <span class="scrutinizer-muted">(' + events.length + ')</span></summary>';
+
 		// Warnings.
 		if ( warnings.length > 0 ) {
 			html += '<div class="scrutinizer-cron-warnings">';
@@ -4184,7 +4189,6 @@
 		// By-source breakdown.
 		if ( summary.by_source && summary.by_source.length > 0 ) {
 			html += '<div class="scrutinizer-cron-sources">';
-			html += '<h4>' + __( 'By Source', 'scrutinizer' ) + '</h4>';
 			html += '<div class="scrutinizer-cron-source-pills">';
 			for ( var s = 0; s < summary.by_source.length; s++ ) {
 				var src  = summary.by_source[s];
@@ -4272,11 +4276,13 @@
 
 		html += '</tbody></table>';
 
-		// Available schedules.
+		html += '</details>';
+
+		// ── Registered Schedules ─────────────────────────────────────
 		if ( schedules.length > 0 ) {
-			html += '<details class="scrutinizer-cron-schedules">';
+			html += '<details class="scrutinizer-cron-section scrutinizer-cron-schedules">';
 			// translators: %d is the number of registered cron schedules.
-			html += '<summary>' + sprintf( __( 'Registered Schedules (%d)', 'scrutinizer' ), schedules.length ) + '</summary>';
+			html += '<summary class="scrutinizer-cron-section-heading">' + sprintf( __( 'Registered Schedules (%d)', 'scrutinizer' ), schedules.length ) + '</summary>';
 			html += '<table class="scrutinizer-profile-table scrutinizer-cron-schedule-table widefat"><thead><tr><th>' + __( 'Name', 'scrutinizer' ) + '</th><th>' + __( 'Interval', 'scrutinizer' ) + '</th><th>' + __( 'Display', 'scrutinizer' ) + '</th></tr></thead><tbody>';
 			for ( var j = 0; j < schedules.length; j++ ) {
 				html += '<tr>';
@@ -4288,11 +4294,13 @@
 			html += '</tbody></table></details>';
 		}
 
-		// Recent cron profiles.
+		// ── Recent Profiles ──────────────────────────────────────────
+		html += '<details class="scrutinizer-cron-section" open>';
+		html += '<summary class="scrutinizer-cron-section-heading">' + __( 'Recent Profiles', 'scrutinizer' ) + '</summary>';
 		html += '<div id="scrutinizer-cron-profiles">';
-		html += '<h4>' + __( 'Recent Cron Profiles', 'scrutinizer' ) + '</h4>';
 		html += '<p class="scrutinizer-empty">' + __( 'Loading\u2026', 'scrutinizer' ) + '</p>';
 		html += '</div>';
+		html += '</details>';
 
 		// Refresh button.
 		html += '<div class="scrutinizer-cron-actions">';
@@ -4319,6 +4327,7 @@
 			action:       'scrutinizer_get_history',
 			nonce:        scrutinizerAdmin.nonce,
 			profile_type: 'background',
+			route_key:    'POST:/wp-cron.php',
 			per_page:     20,
 			paged:        1
 		} ).done( function( response ) {
@@ -4336,7 +4345,7 @@
 			return;
 		}
 
-		var html = '<h4>' + __( 'Recent Cron Profiles', 'scrutinizer' ) + '</h4>';
+		var html = '';
 
 		if ( ! profiles || 0 === profiles.length ) {
 			html += '<p class="scrutinizer-empty">' + __( 'No cron profiles captured yet. Enable cron profiling above to start.', 'scrutinizer' ) + '</p>';
