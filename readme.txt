@@ -3,7 +3,7 @@ Contributors: scrutineerhq
 Tags: performance, profiler, p3, p3-profiler, profiling
 Requires at least: 6.0
 Tested up to: 7.0
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -107,6 +107,12 @@ It is never contacted during normal profiling, page loads, or background capture
 
 == Changelog ==
 
+= 1.2.0 =
+Production-safe capture and cron visibility.
+
+* New: Lightweight capture mode (Settings → Lightweight Mode) — records source/attribution totals only, skipping the timeline and per-callback trace. Profiles are roughly 95% smaller (several MB down to ~200 KB), making always-on background sampling safe on busy production sites. You still get the full "who owns the time" breakdown; the Timeline and Trace tabs note when a capture was lightweight.
+* New: Cron profiling (Settings → Profile Cron Jobs) — opt in to sample WP-Cron runs (normally skipped) so the Cron tab shows measured per-hook cost from real runs, with the worst run flagged.
+
 = 1.1.0 =
 This release focuses on trust — opt-in defaults and honest disclosure — alongside a redesigned timeline and deeper attribution.
 
@@ -185,6 +191,9 @@ This release focuses on trust — opt-in defaults and honest disclosure — alon
 4. Shared report — viewed in the zero-knowledge relay (decrypted entirely in the browser); the same timeline renders here as in the dashboard
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Adds opt-in Lightweight Mode (production-safe, ~95% smaller profiles) and opt-in Cron profiling (per-hook cost). No default changes.
 
 = 1.1.0 =
 Heads-up on two default changes: early-boot timing is now opt-in (no must-use plugin is written on activation), and query profiling (SAVEQUERIES) now defaults off — enable either from Settings. Also: a redesigned Request Timeline, core-developer attribution, accurate blocking-vs-async HTTP timing, and security hardening.
