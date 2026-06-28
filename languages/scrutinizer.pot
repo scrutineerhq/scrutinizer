@@ -2400,3 +2400,29 @@ msgstr ""
 #: assets/js/dashboard.js:3018
 msgid "Textdomains WordPress loaded on demand because a translation function ran before the textdomain was registered. Plugins should load translations on init; themes should use after_setup_theme."
 msgstr ""
+
+#: assets/js/dashboard.js
+msgid "&laquo; First"
+msgstr ""
+
+#: assets/js/dashboard.js
+msgid "&lsaquo; Previous"
+msgstr ""
+
+#: assets/js/dashboard.js
+#, php-format
+msgid "Page %1$d of %2$d (%3$d routes)"
+msgstr ""
+
+#: assets/js/dashboard.js
+msgid "Next &rsaquo;"
+msgstr ""
+
+#: assets/js/dashboard.js
+msgid "Last &raquo;"
+msgstr ""
+
+#: assets/js/dashboard.js
+#, php-format
+msgid "%d routes"
+msgstr ""

@@ -32,6 +32,9 @@
 	var sortDir       = 'desc';    // 'asc' or 'desc'
 	var routeFilter   = '2xx';     // '2xx', '4xx', or '' (all)
 	var routeSearch   = '';
+	var routePage     = 1;
+	var routePerPage  = 50;
+	var routeFilteredCount = 0;
 	var groupedData   = [];
 	var routeData     = [];
 	var historyData   = [];
@@ -615,13 +618,47 @@
 		// Route filter dropdown.
 		$( document ).on( 'change', '#scrutinizer-route-filter', function() {
 			routeFilter = $( this ).val();
+			routePage = 1;
 			renderGroupedTable( groupedData );
 		} );
 
 		// Route search input.
 		$( document ).on( 'input', '#scrutinizer-route-search', function() {
 			routeSearch = $( this ).val().toLowerCase();
+			routePage = 1;
 			renderGroupedTable( groupedData );
+		} );
+
+		// Route pagination.
+		$( document ).on( 'click', '#scrutinizer-route-page-prev', function( e ) {
+			e.preventDefault();
+			if ( routePage > 1 ) {
+				routePage--;
+				renderGroupedTable( groupedData );
+			}
+		} );
+		$( document ).on( 'click', '#scrutinizer-route-page-next', function( e ) {
+			e.preventDefault();
+			var totalPages = Math.ceil( ( routeFilteredCount || 0 ) / routePerPage );
+			if ( routePage < totalPages ) {
+				routePage++;
+				renderGroupedTable( groupedData );
+			}
+		} );
+		$( document ).on( 'click', '#scrutinizer-route-page-first', function( e ) {
+			e.preventDefault();
+			if ( routePage > 1 ) {
+				routePage = 1;
+				renderGroupedTable( groupedData );
+			}
+		} );
+		$( document ).on( 'click', '#scrutinizer-route-page-last', function( e ) {
+			e.preventDefault();
+			var totalPages = Math.ceil( ( routeFilteredCount || 0 ) / routePerPage );
+			if ( routePage < totalPages ) {
+				routePage = totalPages;
+				renderGroupedTable( groupedData );
+			}
 		} );
 
 		// Query profiling + early-boot toggles.
@@ -1728,6 +1765,16 @@
 
 		filtered = sortRows( filtered );
 
+		// Track filtered count for pagination.
+		routeFilteredCount = filtered.length;
+		var totalPages = Math.ceil( filtered.length / routePerPage );
+		if ( routePage > totalPages ) {
+			routePage = totalPages || 1;
+		}
+		var pageStart = ( routePage - 1 ) * routePerPage;
+		var pageEnd   = Math.min( pageStart + routePerPage, filtered.length );
+		var pageSlice = filtered.slice( pageStart, pageEnd );
+
 		// Filter bar.
 		var html = '<div class="scrutinizer-filter-bar">';
 		html += '<label>' + __( 'Showing:', 'scrutinizer' ) + ' <select id="scrutinizer-route-filter">';
@@ -1756,8 +1803,8 @@
 		html += '<th>' + __( 'Type', 'scrutinizer' ) + '</th>';
 		html += '</tr></thead><tbody>';
 
-		for ( var i = 0; i < filtered.length; i++ ) {
-			var r = filtered[ i ];
+		for ( var i = 0; i < pageSlice.length; i++ ) {
+			var r = pageSlice[ i ];
 			var avgMs = ( parseFloat( r.avg_duration_ns ) / 1e6 ).toFixed( 1 );
 			var minMs = ( parseInt( r.min_duration_ns, 10 ) / 1e6 ).toFixed( 1 );
 			var maxMs = ( parseInt( r.max_duration_ns, 10 ) / 1e6 ).toFixed( 1 );
@@ -1788,6 +1835,24 @@
 		}
 
 		html += '</tbody></table>';
+
+		// Pagination.
+		if ( totalPages > 1 ) {
+			html += '<div class="scrutinizer-pagination">';
+			html += '<a href="#" id="scrutinizer-route-page-first" class="button' + ( routePage <= 1 ? ' disabled' : '' ) + '">' + __( '&laquo; First', 'scrutinizer' ) + '</a>';
+			html += '<a href="#" id="scrutinizer-route-page-prev" class="button' + ( routePage <= 1 ? ' disabled' : '' ) + '">' + __( '&lsaquo; Previous', 'scrutinizer' ) + '</a>';
+			// translators: 1: current page number, 2: total number of pages, 3: total route count.
+			html += '<span class="scrutinizer-page-info">' + sprintf( __( 'Page %1$d of %2$d (%3$d routes)', 'scrutinizer' ), routePage, totalPages, filtered.length ) + '</span>';
+			html += '<a href="#" id="scrutinizer-route-page-next" class="button' + ( routePage >= totalPages ? ' disabled' : '' ) + '">' + __( 'Next &rsaquo;', 'scrutinizer' ) + '</a>';
+			html += '<a href="#" id="scrutinizer-route-page-last" class="button' + ( routePage >= totalPages ? ' disabled' : '' ) + '">' + __( 'Last &raquo;', 'scrutinizer' ) + '</a>';
+			html += '</div>';
+		} else if ( filtered.length > 0 ) {
+			html += '<div class="scrutinizer-pagination">';
+			// translators: %d is the total number of routes.
+			html += '<span class="scrutinizer-page-info">' + sprintf( __( '%d routes', 'scrutinizer' ), filtered.length ) + '</span>';
+			html += '</div>';
+		}
+
 		$list.html( html );
 	}
 
@@ -1796,6 +1861,7 @@
 		currentRoute = '';
 		sortField    = 'avg_duration_ns';
 		sortDir      = 'desc';
+		routePage    = 1;
 		$( '#scrutinizer-results' ).show();
 		$( '#scrutinizer-route-detail' ).remove();
 		$( '#scrutinizer-detail' ).hide();
