@@ -151,6 +151,10 @@
         }
       }
       for (var si = 0; si < rawSources.length; si++) {
+        // Share payload uses 'source' instead of 'slug'
+        if (rawSources[si].slug == null && rawSources[si].source != null) {
+          rawSources[si].slug = rawSources[si].source;
+        }
         if (rawSources[si].exclusive_ms != null && rawSources[si].exclusive_ns == null) {
           rawSources[si].exclusive_ns = (rawSources[si].exclusive_ms || 0) * 1e6;
         }
