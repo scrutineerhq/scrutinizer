@@ -223,10 +223,10 @@ function scrutinizer_capture_banner() {
 
 	$text = esc_html__( 'Profiling active - keep browsing to capture more pages.', 'scrutinizer' );
 	?>
-	<div id="scrutinizer-capture-banner" role="status" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:999999;background:#1d2327;color:#f0f0f1;font:13px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;padding:10px 16px;align-items:center;gap:10px;box-shadow:0 -2px 8px rgba(0,0,0,.3);justify-content:center;">
+	<div id="scrutinizer-capture-banner" role="status" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:100001;background:#1d2327;color:#f0f0f1;font:13px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;padding:10px 16px;align-items:center;gap:10px;box-shadow:0 -1px 4px rgba(0,0,0,.15);justify-content:center;border-top:2px solid #00ba37;">
 		<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00ba37;flex-shrink:0;"></span>
 		<span><?php echo $text; ?></span>
-		<button type="button" id="scrutinizer-capture-dismiss" style="background:none;border:none;color:#a7aaad;cursor:pointer;font-size:18px;line-height:1;padding:0 4px;margin-left:8px;" aria-label="<?php esc_attr_e( 'Dismiss', 'scrutinizer' ); ?>">&times;</button>
+		<button type="button" id="scrutinizer-capture-dismiss" style="background:none;border:none;color:#c3c4c7;cursor:pointer;font-size:18px;line-height:1;padding:8px 12px;min-width:32px;min-height:32px;margin-left:4px;display:inline-flex;align-items:center;justify-content:center;" aria-label="<?php esc_attr_e( 'Dismiss', 'scrutinizer' ); ?>">&times;</button>
 	</div>
 	<script>
 	(function(){
@@ -234,10 +234,15 @@ function scrutinizer_capture_banner() {
 		var b=document.getElementById('scrutinizer-capture-banner');
 		if(!b)return;
 		b.style.display='flex';
-		document.getElementById('scrutinizer-capture-dismiss').addEventListener('click',function(){
+		document.documentElement.style.paddingBottom='42px';
+		var d=document.getElementById('scrutinizer-capture-dismiss');
+		d.addEventListener('click',function(){
 			b.style.display='none';
+			document.documentElement.style.paddingBottom='';
 			sessionStorage.setItem('scrutinizer_banner_off','1');
 		});
+		d.addEventListener('mouseenter',function(){d.style.color='#f0f0f1';});
+		d.addEventListener('mouseleave',function(){d.style.color='#c3c4c7';});
 	})();
 	</script>
 	<?php
