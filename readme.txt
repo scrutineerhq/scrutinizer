@@ -3,7 +3,7 @@ Contributors: scrutineerhq
 Tags: performance, profiler, p3, p3-profiler, profiling
 Requires at least: 6.0
 Tested up to: 7.0
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -107,6 +107,11 @@ It is never contacted during normal profiling, page loads, or background capture
 
 == Changelog ==
 
+= 1.2.1 =
+Capture experience polish.
+
+* New: Capture feedback banner - floating bottom bar on every profiled page confirms profiling is active and encourages continued browsing. Works on admin pages, front-end logged in, and front-end logged out.
+
 = 1.2.0 =
 Production-safe capture and cron visibility.
 
@@ -191,6 +196,9 @@ This release focuses on trust — opt-in defaults and honest disclosure — alon
 4. Shared report — viewed in the zero-knowledge relay (decrypted entirely in the browser); the same timeline renders here as in the dashboard
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+Adds a capture feedback banner so users know profiling is active while browsing. No default changes.
 
 = 1.2.0 =
 Adds opt-in Lightweight Mode (production-safe, ~95% smaller profiles) and opt-in Cron profiling (per-hook cost). No default changes.
