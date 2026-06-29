@@ -207,24 +207,18 @@ This release focuses on trust — opt-in defaults and honest disclosure — alon
 1. Dashboard home with quick-start cards and FAQ
 2. Request Timeline showing phase markers, HTTP wait lane, query density, and memory curve
 3. Sources tab ranking each plugin and theme by exclusive callback time
-4. WordPress Core subsystem breakdown showing where time goes inside core
-5. Queries tab with grouped SQL patterns, duplicate detection, and source attribution
-6. HTTP Calls tab listing external requests with status, duration, and caller
-7. Assets tab inventorying enqueued scripts and stylesheets by size and source
-8. Trace tab with 11,883 callbacks, search, filter presets, and sortable columns
-9. Metadata tab with environment details and developer signals
-10. Routes view with trend sparkline, regression detection, and profile history
-11. Cron tab with scheduled hooks, source pills, cost from last run, and overdue alerts
-12. Share Report dialog with expiry, burn-after-read, passphrase, and section checkboxes
-13. Share Report success showing the encrypted, revocable link
-14. Shared report opened in the zero-knowledge relay viewer (decrypted in the browser)
-15. API tab: Send to Agent with one-click prompt generation for AI coding agents
-16. API tab: Prompt copied, credential generated, Revoke Access available
-17. API tab: Shared Reports ledger and Access Log showing endpoint usage by IP
-18. Settings: background measurement, capture rate presets, user/path filters
-19. Settings: query profiling, early boot timing, lightweight mode, cron profiling toggles
-20. Settings: profile retention and proxy header trust for CDN/load-balancer setups
-21. AI agent terminal output diagnosing a blocking HTTP call as the top performance issue
+4. Queries tab with grouped SQL patterns, duplicate detection, and source attribution
+5. HTTP Calls tab listing external requests with status, duration, and caller
+6. Trace tab with 11,883 callbacks, search, filter presets, and sortable columns
+7. Routes view with trend sparkline, regression detection, and profile history
+8. Cron tab with scheduled hooks, source pills, cost from last run, and overdue alerts
+9. Share Report dialog with expiry, burn-after-read, passphrase, and section checkboxes
+10. Shared report opened in the zero-knowledge relay viewer (decrypted in the browser)
+11. API tab: Send to Agent with one-click prompt generation for AI coding agents
+12. API tab: Shared Reports ledger and Access Log showing endpoint usage by IP
+13. Settings: background measurement, capture rate presets, user/path filters
+14. Settings: profile retention and proxy header trust for CDN/load-balancer setups
+15. AI agent terminal output diagnosing a blocking HTTP call as the top performance issue
 
 == Upgrade Notice ==
 
