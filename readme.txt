@@ -3,7 +3,7 @@ Contributors: scrutineerhq
 Tags: performance, profiler, p3, p3-profiler, profiling
 Requires at least: 6.0
 Tested up to: 7.0
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -106,6 +106,20 @@ It is never contacted during normal profiling, page loads, or background capture
 **Data retention:** a shared report expires after the TTL you choose, can be set to burn after its first read, and can be revoked manually at any time. The relay only ever stores ciphertext.
 
 == Changelog ==
+
+= 1.2.2 =
+Cron visibility, sharing fixes, and wp.org polish.
+
+* New: Cron tab reorganized into collapsible source sections with recent cron profile history.
+* New: Routes view now paginates client-side for sites with many measured routes.
+* New: Send to Agent prompt simplified — bootstraps from /v1/prompt instead of embedding the full prompt inline.
+* Fixed: Shared report timeline now shows correct plugin names and colors.
+* Fixed: Shared report trace rendering restored.
+* Fixed: False-positive duplicate cron warnings eliminated.
+* Fixed: DESCRIBE/DESC/EXPLAIN queries no longer lose their table name in query grouping.
+* Changed: Removed JIT textdomain section from Metadata tab (no longer relevant on WP 6.7+).
+* Changed: Share payload passes fields through directly — no more field renaming.
+* wp.org: Added 21 screenshots, HiDPI banners, and updated readme descriptions.
 
 = 1.2.1 =
 Capture experience polish.
@@ -213,6 +227,9 @@ This release focuses on trust — opt-in defaults and honest disclosure — alon
 21. AI agent terminal output diagnosing a blocking HTTP call as the top performance issue
 
 == Upgrade Notice ==
+
+= 1.2.2 =
+Cron tab reorganized with collapsible sections and profile history. Shared report timeline/trace rendering fixed. Routes view paginates. No default changes.
 
 = 1.2.1 =
 Adds a capture feedback banner so users know profiling is active while browsing. No default changes.
