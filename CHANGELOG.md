@@ -5,6 +5,34 @@ All notable changes to Scrutinizer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-06-28
+
+Cron visibility, sharing fixes, and wp.org polish.
+
+### Added
+
+- **Cron tab reorganized** into collapsible source sections with a recent cron profile history panel.
+- **Routes pagination** — client-side pagination for sites with many measured routes.
+- **Lightweight profile indicator** — profiles captured in lightweight mode are labeled in the dashboard.
+
+### Changed
+
+- **Send to Agent** prompt simplified — bootstraps from `/v1/prompt` instead of embedding the full prompt inline.
+- Removed JIT textdomain section from the Metadata tab (no longer relevant on WP 6.7+).
+- Share payload passes fields through directly — no more field renaming between plugin and relay.
+
+### Fixed
+
+- Shared report timeline now shows correct plugin names and colors.
+- Shared report trace rendering restored.
+- False-positive duplicate cron warnings eliminated.
+- `DESCRIBE`/`DESC`/`EXPLAIN` queries no longer lose their table name in query grouping.
+
+### wp.org
+
+- Added 21 screenshots with descriptions and HiDPI banners.
+- Corrected screenshot slot ordering.
+
 ## [1.2.1] - 2026-06-28
 
 Capture experience polish.
