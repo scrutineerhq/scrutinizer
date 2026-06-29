@@ -61,28 +61,30 @@ class Dashboard {
 			return;
 		}
 
+		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+
 		wp_enqueue_style(
 			'scrutinizer-dashboard',
-			SCRUTINIZER_URL . 'assets/css/dashboard.css',
+			SCRUTINIZER_URL . 'assets/css/dashboard' . $suffix . '.css',
 			array(),
-			SCRUTINIZER_VERSION . '.' . filemtime( SCRUTINIZER_DIR . 'assets/css/dashboard.css' )
+			SCRUTINIZER_VERSION . '.' . filemtime( SCRUTINIZER_DIR . 'assets/css/dashboard' . $suffix . '.css' )
 		);
 
 		// Shared, framework-agnostic timeline renderer — the same module the
 		// relay viewer embeds, so both viewing surfaces render identically.
 		wp_enqueue_script(
 			'scrutinizer-timeline',
-			SCRUTINIZER_URL . 'assets/js/scrutinizer-timeline.js',
+			SCRUTINIZER_URL . 'assets/js/scrutinizer-timeline' . $suffix . '.js',
 			array(),
-			SCRUTINIZER_VERSION . '.' . filemtime( SCRUTINIZER_DIR . 'assets/js/scrutinizer-timeline.js' ),
+			SCRUTINIZER_VERSION . '.' . filemtime( SCRUTINIZER_DIR . 'assets/js/scrutinizer-timeline' . $suffix . '.js' ),
 			true
 		);
 
 		wp_enqueue_script(
 			'scrutinizer-dashboard',
-			SCRUTINIZER_URL . 'assets/js/dashboard.js',
+			SCRUTINIZER_URL . 'assets/js/dashboard' . $suffix . '.js',
 			array( 'jquery', 'wp-i18n', 'scrutinizer-timeline' ),
-			SCRUTINIZER_VERSION . '.' . filemtime( SCRUTINIZER_DIR . 'assets/js/dashboard.js' ),
+			SCRUTINIZER_VERSION . '.' . filemtime( SCRUTINIZER_DIR . 'assets/js/dashboard' . $suffix . '.js' ),
 			true
 		);
 
