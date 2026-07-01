@@ -2372,21 +2372,21 @@
 
 		// Thin proportional breakdown bar.
 		var html = '<div class="scrutinizer-source-bar">';
+		var renderedNs = 0;
 		for ( var sb = 0; sb < sources.length; sb++ ) {
 			var barSrc = sources[ sb ];
 			var barPct = ( ( barSrc.exclusive_ns || 0 ) / durationNs ) * 100;
 			if ( barPct < 0.1 ) { continue; }
+			renderedNs += ( barSrc.exclusive_ns || 0 );
 			var barCol = getSourceColor( barSrc.slug, barSrc.type );
 			html += '<div class="segment" style="width:' + barPct.toFixed( 2 ) + '%;background:' + barCol + '" title="' + esc( barSrc.name || barSrc.slug ) + ': ' + ( barSrc.exclusive_ns / 1e6 ).toFixed( 1 ) + ' ms (' + barPct.toFixed( 1 ) + '%)"></div>';
 		}
-		// Unattributed time as its own segment.
-		var unattribNs = summary.unattributed_ns || 0;
-		var bootstrapNs = summary.bootstrap_ns || 0;
-		var accountedNs = unattribNs + bootstrapNs;
-		if ( accountedNs > 0 ) {
-			var unPct = ( accountedNs / durationNs ) * 100;
+		// Unattributed: remainder of duration not covered by source segments.
+		var remainderNs = durationNs - renderedNs;
+		if ( remainderNs > 0 ) {
+			var unPct = ( remainderNs / durationNs ) * 100;
 			if ( unPct >= 0.1 ) {
-				html += '<div class="segment" style="width:' + unPct.toFixed( 2 ) + '%;background:#dcdcde" title="' + esc( __( 'Unattributed + Bootstrap', 'scrutinizer' ) ) + ': ' + ( accountedNs / 1e6 ).toFixed( 1 ) + ' ms (' + unPct.toFixed( 1 ) + '%)"></div>';
+				html += '<div class="segment" style="width:' + unPct.toFixed( 2 ) + '%;background:#dcdcde" title="' + esc( __( 'Unattributed', 'scrutinizer' ) ) + ': ' + ( remainderNs / 1e6 ).toFixed( 1 ) + ' ms (' + unPct.toFixed( 1 ) + '%)"></div>';
 			}
 		}
 		html += '</div>';
